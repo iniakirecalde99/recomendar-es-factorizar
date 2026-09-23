@@ -1,0 +1,49 @@
+"""Valores por defecto de los hiperparámetros de la demo (spec §10, plan.md §3).
+
+PROVISORIO: todos los valores de este archivo se fijaron a mano para poder
+cerrar T14, sin correr la demo sobre MovieLens real (no hay dataset real en
+este entorno — ver specs/bitacora.md). Hay que recalibrarlos corriendo la
+demo sobre el dataset real (decisión 4 de plan.md) antes de usar estos
+números para las conclusiones del informe.
+"""
+
+# --- Preprocesamiento y modelo ---
+
+K_DEFECTO: int = 10
+# PROVISORIO: calibrar sobre MovieLens real. Motivo: umbral de filtro (§4) y
+# dimensión latente (§5) chicos a propósito, para no descartar de más sobre
+# 943 usuarios x 1682 películas y para que ALS/GD corran rápido en una demo
+# en vivo (mismo valor para ambos por diseño, ver decisión 5 de plan.md).
+
+ETA_DEFECTO: float = 1e-4
+# PROVISORIO: calibrar sobre MovieLens real. Motivo: paso chico a propósito
+# — sobre la matriz completa los gradientes de la SCE tienen magnitud
+# grande, y un eta mayor arriesga que f aumente en vez de bajar (spec §7,
+# paso 5 del algoritmo).
+
+EPSILON_DEFECTO: float = 1e-2
+# PROVISORIO: calibrar sobre MovieLens real. Motivo: tolerancia laxa a
+# propósito — sobre el dataset completo la SCE arranca en el orden de los
+# miles, así que una tolerancia mucho más chica podría no cortar nunca
+# antes de max_iter.
+
+MAX_ITER_DEFECTO: int = 1000
+# PROVISORIO: calibrar sobre MovieLens real. Motivo: cota para que la demo
+# en vivo no corra indefinidamente si epsilon no se alcanza.
+
+SEMILLA_DEFECTO: int = 42
+# PROVISORIO: calibrar sobre MovieLens real. Motivo: semilla arbitraria
+# fija, solo para que la demo sea reproducible entre corridas (CA-10); no
+# hay un criterio de "mejor" semilla.
+
+ESCALA_INICIALIZACION_DEFECTO: float = 1.0
+# PROVISORIO: calibrar sobre MovieLens real. Motivo: escala simple (U0, V0
+# uniformes en [0, 1)), del mismo orden que las calificaciones más chicas
+# (1 a 5), sin sobreestimar r_hat desde el arranque.
+
+# --- Demo ---
+
+TOP_N_DEFECTO: int = 10
+# PROVISORIO: calibrar sobre MovieLens real. Motivo (decisión 7 de
+# plan.md): lo que entra cómodo en pantalla durante la demo; a diferencia
+# de los anteriores, no depende de la escala del dataset.

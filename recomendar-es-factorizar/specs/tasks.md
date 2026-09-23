@@ -135,7 +135,7 @@ marcado `skip` (motivo: V₀ del ejemplo todavía no está fijado en la spec), y
 **Cierra:** CA-07.
 **Test que se escribe primero:** `test_gd_factorizacion.py::test_gradiente_sce_coincide_con_diferencias_finitas`.
 
-### [ ] T11 — `entrenar_gd` y reproducibilidad
+### [x] T11 — `entrenar_gd` y reproducibilidad
 **Objetivo:** descenso de gradiente completo sobre la factorización,
 actualizando U y V simultáneamente con los valores de la iteración t, y
 verificar que la misma semilla produce exactamente el mismo resultado.
@@ -146,7 +146,7 @@ verificar que la misma semilla produce exactamente el mismo resultado.
 
 ## 6. Comparación
 
-### [ ] T12 — Tabla de comparación y gráfico de convergencia
+### [x] T12 — Tabla de comparación y gráfico de convergencia
 **Objetivo:** armar una fila por método (iteraciones, motivo de corte,
 tiempo, SCE final) y formatearlas como texto plano con f-strings, sin
 dependencias nuevas; graficar f vs. iteración para ALS y GD en el mismo eje,
@@ -162,7 +162,7 @@ sin partición entrenamiento/prueba, una sola SCE por método).
 
 ## 7. Recomendaciones
 
-### [ ] T13 — Top-N y extremos por factor latente
+### [x] T13 — Top-N y extremos por factor latente
 **Objetivo:** recomendar las n películas no calificadas por un usuario con
 mayor r̂ᵢⱼ, y para cada columna de V listar las películas con mayor y menor
 valor, sin etiquetar el factor.
@@ -174,7 +174,7 @@ valor, sin etiquetar el factor.
 
 ## 8. Demo
 
-### [ ] T14 — Demo completa
+### [x] T14 — Demo completa
 **Objetivo:** encadenar carga, filtro y títulos en `preparar_datos_movielens`;
 definir los argumentos de `python -m src.demo` con los defaults de
 `config.py` (sin `--rmse`); correr el flujo completo (datos → inicialización
