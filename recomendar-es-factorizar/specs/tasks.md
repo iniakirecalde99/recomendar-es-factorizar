@@ -16,7 +16,7 @@ red ni dataset real.
 
 ## 0. Guarda transversal
 
-### T00 — Configuración de pytest: marker `movielens`
+### [x] T00 — Configuración de pytest: marker `movielens`
 **Objetivo:** registrar el marker `movielens` y saltear automáticamente,
 con motivo, los tests que lo usan cuando `data/ml-100k/` no existe.
 **Archivos:** `pytest.ini` (registro del marker), `tests/conftest.py`
@@ -28,7 +28,7 @@ corrida de `pytest -q` en un checkout sin `data/ml-100k/`, donde los tests
 marcados `movielens` (T03) quedan en `skipped` con el motivo, no en `error`
 ni `failed`.
 
-### T01 — Test estático anti-dependencias prohibidas
+### [x] T01 — Test estático anti-dependencias prohibidas
 **Objetivo:** tener desde el arranque un test que falle si algún archivo de
 `src/` importa Surprise/implicit/scikit-learn o usa `inv`/`lstsq`/`pinv`.
 **Archivos:** ninguno en `src/` (solo `tests/test_dependencias.py`).
@@ -40,7 +40,7 @@ tarea siguiente. `test_src_no_importa_librerias_prohibidas`,
 
 ## 1. Datos y preprocesamiento
 
-### T02 — Script de descarga de MovieLens
+### [x] T02 — Script de descarga de MovieLens
 **Objetivo:** descargar y descomprimir el zip de MovieLens 100K a `data/`,
 informando si ya existe y fallando con mensaje claro sin red.
 **Archivos:** `scripts/descargar_movielens.py`, `src/errores.py`
@@ -50,7 +50,7 @@ informando si ya existe y fallando con mensaje claro sin red.
 y `test_descargar_movielens_falla_con_mensaje_y_url_si_no_hay_red` (con la
 descarga mockeada, sin red real).
 
-### T03 — Carga de calificaciones crudas
+### [x] T03 — Carga de calificaciones crudas
 **Objetivo:** cargar un archivo estilo `u.data`, reindexar ids desde 0 y
 armar `R` (NaN en huecos) y `M`.
 **Archivos:** `src/datos.py` (`ConjuntoCalificaciones`, `cargar_calificaciones`).
@@ -64,7 +64,7 @@ propiamente dicho: R es 943×1682 y M tiene 100.000 True), marcado
 `@pytest.mark.movielens`, sobre `data/ml-100k/u.data` real — se saltea con
 motivo si `data/ml-100k/` no existe (ver T00).
 
-### T04 — Filtro iterativo por mínimo k
+### [x] T04 — Filtro iterativo por mínimo k
 **Objetivo:** eliminar filas/columnas con menos de k calificaciones hasta
 punto fijo, reindexar y actualizar mapeos.
 **Archivos:** `src/datos.py` (`filtrar_por_minimo`), `src/errores.py`
@@ -74,7 +74,7 @@ punto fijo, reindexar y actualizar mapeos.
 (y un test adicional para `ErrorDatosInsuficientes` cuando el filtro vacía la
 matriz).
 
-### T05 — Títulos
+### [x] T05 — Títulos
 **Objetivo:** cargar `u.item` y construir el mapeo índice de columna → título.
 **Archivos:** `src/datos.py` (`cargar_titulos`, `construir_indice_a_titulo`).
 **Cierra:** ninguno (soporta spec §10).
@@ -83,7 +83,7 @@ matriz).
 
 ## 2. Modelo
 
-### T06 — Predicción, SCE e inicialización compartida
+### [x] T06 — Predicción, SCE e inicialización compartida
 **Objetivo:** calcular R̂ = U·Vᵀ, la SCE sobre Ω sin factor 1/2, e
 inicializar U₀, V₀ uniformes en [0, escala) a partir de un `Generator`
 compartido entre ALS y GD.
@@ -96,7 +96,7 @@ cambia), y `test_modelo.py::test_inicializar_factores_reproducible_con_la_misma_
 
 ## 3. Descenso de gradiente genérico
 
-### T07 — `descenso_gradiente` genérico
+### [x] T07 — `descenso_gradiente` genérico
 **Objetivo:** descenso de gradiente completo para funciones de ℝⁿ, con
 criterio de corte por tolerancia o `max_iter`.
 **Archivos:** `src/gradiente.py` (`descenso_gradiente`, `ResultadoDescensoGenerico`).
@@ -106,7 +106,7 @@ criterio de corte por tolerancia o `max_iter`.
 
 ## 4. ALS
 
-### T08 — `resolver_factor`
+### [x] T08 — `resolver_factor`
 **Objetivo:** resolver por fila las ecuaciones normales de mínimos cuadrados
 con `np.linalg.solve`, lanzando `SistemaSingularError` si corresponde.
 **Archivos:** `src/als.py` (`resolver_factor`), `src/errores.py`
@@ -115,7 +115,7 @@ con `np.linalg.solve`, lanzando `SistemaSingularError` si corresponde.
 **Test que se escribe primero:** `test_als.py::test_resolver_factor_transpuesto_coincide_con_calculo_manual_de_v`
 (y un test del caso singular, sin CA propio).
 
-### T09 — `entrenar_als` y reproducibilidad
+### [x] T09 — `entrenar_als` y reproducibilidad
 **Objetivo:** alternar el paso de U y V hasta convergencia o `max_iter`,
 devolviendo `ResultadoEntrenamiento`, y verificar que la misma semilla
 produce exactamente el mismo resultado.
@@ -129,13 +129,13 @@ marcado `skip` (motivo: V₀ del ejemplo todavía no está fijado en la spec), y
 
 ## 5. Descenso de gradiente matricial
 
-### T10 — `gradiente_sce`
+### [ ] T10 — `gradiente_sce`
 **Objetivo:** calcular ∇_U f y ∇_V f sobre el mismo (U, V), sin factor 1/2.
 **Archivos:** `src/gradiente.py` (`gradiente_sce`).
 **Cierra:** CA-07.
 **Test que se escribe primero:** `test_gd_factorizacion.py::test_gradiente_sce_coincide_con_diferencias_finitas`.
 
-### T11 — `entrenar_gd` y reproducibilidad
+### [ ] T11 — `entrenar_gd` y reproducibilidad
 **Objetivo:** descenso de gradiente completo sobre la factorización,
 actualizando U y V simultáneamente con los valores de la iteración t, y
 verificar que la misma semilla produce exactamente el mismo resultado.
@@ -146,7 +146,7 @@ verificar que la misma semilla produce exactamente el mismo resultado.
 
 ## 6. Comparación
 
-### T12 — Tabla de comparación y gráfico de convergencia
+### [ ] T12 — Tabla de comparación y gráfico de convergencia
 **Objetivo:** armar una fila por método (iteraciones, motivo de corte,
 tiempo, SCE final) y formatearlas como texto plano con f-strings, sin
 dependencias nuevas; graficar f vs. iteración para ALS y GD en el mismo eje,
@@ -162,7 +162,7 @@ sin partición entrenamiento/prueba, una sola SCE por método).
 
 ## 7. Recomendaciones
 
-### T13 — Top-N y extremos por factor latente
+### [ ] T13 — Top-N y extremos por factor latente
 **Objetivo:** recomendar las n películas no calificadas por un usuario con
 mayor r̂ᵢⱼ, y para cada columna de V listar las películas con mayor y menor
 valor, sin etiquetar el factor.
@@ -174,7 +174,7 @@ valor, sin etiquetar el factor.
 
 ## 8. Demo
 
-### T14 — Demo completa
+### [ ] T14 — Demo completa
 **Objetivo:** encadenar carga, filtro y títulos en `preparar_datos_movielens`;
 definir los argumentos de `python -m src.demo` con los defaults de
 `config.py` (sin `--rmse`); correr el flujo completo (datos → inicialización
