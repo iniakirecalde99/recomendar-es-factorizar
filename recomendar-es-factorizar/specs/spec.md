@@ -38,12 +38,14 @@ rendimiento más allá de numpy vectorizado.
   usuario o película fue filtrado.
 - Loguear (WARNING) cuántas películas, usuarios y calificaciones se eliminaron,
   en entrenamiento y en prueba. Ese número va a la sección 8 del informe.
+- El umbral del filtro es el mismo k de la factorización, no un parámetro
+  aparte: en ALS el sistema de cada fila es de k × k y necesita al menos k
+  datos observados.
 
 ## 5. Modelo (informe sección 4)
 - Estimación: R̂ = U·Vᵀ, con U de m × k y V de n × k; r̂ᵢⱼ = uᵢ · vⱼ.
-- Pérdida: f(U, V) = Σ_{(i,j) ∈ Ω} (rᵢⱼ − uᵢ · vⱼ)². Suma de cuadrados sin
-  factor 1/2. [PENDIENTE: confirmar que coincide con la definición de la
-  sección 4 del informe; si el informe usa 1/2, se cambia acá y en el código.]
+- Pérdida: SCE(U, V) = Σ_{(i,j) ∈ Ω} (rᵢⱼ − uᵢ · vⱼ)², suma de cuadrados
+  del error sin factor 1/2, igual que en el informe (sección 3.5).
 - Inicialización: U y V con valores aleatorios uniformes en [0, escala), a
   partir de una semilla. Para comparar, ALS y GD arrancan de la MISMA U y V
   iniciales.
@@ -88,12 +90,10 @@ max_iter).
 - Gráfico: f vs. iteración para ALS y GD en el mismo eje (escala log en y).
 - Tabla por consola: iteraciones, tiempo, f final de entrenamiento, error de
   prueba.
-- [PENDIENTE: RMSE queda detrás del flag `--rmse`, deshabilitado por defecto,
-  hasta que se apruebe su uso en la sección 8.]
 
 ## 10. Demo (`python -m src.demo`)
 Argumentos: `--metodo {als,gd,ambos}`, `--k`, `--eta`, `--epsilon`,
-`--max-iter`, `--semilla`, `--usuario`, `--top-n`, `--rmse`.
+`--max-iter`, `--semilla`, `--usuario`, `--top-n`.
 Salidas:
 - Resumen del preprocesamiento (filtrados).
 - Progreso por iteración (logging INFO).
@@ -129,9 +129,10 @@ Salidas:
       Carla: 1  ?  3  5  ?
       Diego: ?  1  ?  4  5
   (columnas: Toy Story, Star Wars, Fargo, Titanic, Scream). ALS no lanza
-  SistemaSingularError y f decrece. [PENDIENTE: fijar la V₀ del ejemplo de la
-  sección 5 del informe y verificar que la primera iteración reproduce su
-  tabla.]
+  SistemaSingularError y f decrece. Esta parte del criterio ya es exigible.
+  [PENDIENTE: fijar la V₀ del ejemplo de la sección 5 del informe; hasta
+  entonces, un test adicional que compare la primera iteración contra la
+  tabla del informe queda marcado `skip` con el motivo escrito.]
 - CA-10 Reproducibilidad: misma semilla, mismos resultados.
 - CA-11 Recomendaciones: el top-N nunca incluye películas ya calificadas por el
   usuario.
@@ -139,8 +140,6 @@ Salidas:
   implicit ni scikit-learn, ni usa inv, lstsq o pinv.
 
 ## 12. Decisiones pendientes
-- Factor 1/2 en la pérdida (alinear con la sección 4 del informe).
-- Aprobación de RMSE para la sección 8.
 - V₀ del ejemplo de ALS a mano (sección 5 del informe).
 - Valores por defecto de k, eta, epsilon y max_iter para MovieLens: se
   calibran en una tarea específica y se documentan en `config.py` con el
