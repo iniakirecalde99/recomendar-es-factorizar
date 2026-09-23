@@ -27,8 +27,8 @@ implementada tiene que coincidir con la del informe.
    usando la máscara M (booleana, M[i,j] = True si (i,j) ∈ Ω). Nunca rellenar
    huecos con ceros ni con promedios.
 3. ALS y descenso de gradiente viven en módulos separados y no comparten lógica
-   de actualización. Solo comparten: carga de datos, predicción U @ V.T y
-   función de pérdida.
+   de actualización. Solo comparten: carga de datos, inicialización de U y V, predicción
+   U @ V.T y función de pérdida (SCE).
 4. ALS: el paso de V es la MISMA función que el paso de U, llamada con R.T y
    M.T (relación inversa, informe 3.1 y 5.2). No escribir una segunda función
    para V.
