@@ -29,16 +29,20 @@ rendimiento más allá de numpy vectorizado.
 
 ## 4. Preprocesamiento
 - Construir R (m × n, float, `np.nan` en huecos) y M (m × n, bool).
-- Filtro por k: eliminar las películas con menos de k calificaciones en
-  entrenamiento, y los usuarios con menos de k calificaciones. Repetir hasta que
-  no se elimine nada. Motivo: sin regularización, el paso de ALS de una fila con
-  menos de k datos no tiene solución única.
+- Filtro por umbral: eliminar las películas con menos de `umbral`
+  calificaciones en entrenamiento, y los usuarios con menos de `umbral`
+  calificaciones. Repetir hasta que no se elimine nada.
 - Reindexar después del filtro.
 - Loguear (WARNING) cuántas películas, usuarios y calificaciones se
   eliminaron. Ese número va a la sección 8 del informe.
-- El umbral del filtro es el mismo k de la factorización, no un parámetro
-  aparte: en ALS el sistema de cada fila es de k × k y necesita al menos k
-  datos observados.
+- `umbral` es un parámetro propio del filtro, independiente de k, pero tiene
+  que ser >= k: en ALS el sistema de cada fila es de k × k y necesita al
+  menos k datos observados para tener solución única. **Corregido tras
+  calibrar con MovieLens real** (specs/bitacora.md): tener exactamente k
+  observaciones alcanza para que esa solución sea única, pero no para que
+  sea razonable — con `umbral == k == 5` apareció `SistemaSingularError`, y
+  con `umbral == k == 10` las predicciones fuera de Ω llegaron a ~1.7×10⁸.
+  Si `umbral` < k, `filtrar_por_minimo` lanza `UmbralInsuficienteError`.
 
 ## 5. Modelo (informe sección 4)
 - Estimación: R̂ = U·Vᵀ, con U de m × k y V de n × k; r̂ᵢⱼ = uᵢ · vⱼ.
@@ -88,14 +92,17 @@ max_iter).
 - Tabla por consola: iteraciones, tiempo, f final.
 
 ## 10. Demo (`python -m src.demo`)
-Argumentos: `--datos`, `--grafico`, `--k`, `--eta`, `--epsilon`,
+Argumentos: `--datos`, `--grafico`, `--umbral`, `--k`, `--eta`, `--epsilon`,
 `--max-iter`, `--semilla`, `--usuario`, `--top-n`. Sin `--metodo`: la demo
-siempre corre ALS y GD, para poder compararlos (sección 9). `--usuario`
-recibe el id crudo de MovieLens (no el índice reindexado); si el usuario no
-está en el conjunto filtrado, falla con un error claro.
+siempre corre ALS y GD, para poder compararlos (sección 9). `--umbral` es el
+parámetro del filtro (spec §4), independiente de `--k`. `--usuario` recibe
+el id crudo de MovieLens (no el índice reindexado); si el usuario no está en
+el conjunto filtrado, falla con un error claro.
 Salidas:
 - Resumen del preprocesamiento (filtrados).
-- Progreso por iteración (logging INFO).
+- Progreso por iteración: cada iteración en logging DEBUG; en INFO, una
+  línea cada 100 iteraciones más el resumen final de cada método
+  (iteraciones, motivo de corte, f final).
 - Comparación (sección 9).
 - Top-N recomendaciones para `--usuario`, de ALS y de GD lado a lado:
   películas no calificadas por él con mayor r̂ᵢⱼ, con título.
@@ -110,8 +117,8 @@ Salidas:
   tiene 100.000 valores True.
 - CA-02 Huecos: modificar cualquier valor fuera de Ω (incluido reemplazar NaN
   por un número) no cambia f.
-- CA-03 Filtro: después del preprocesamiento, toda fila y columna de M tiene al
-  menos k valores True.
+- CA-03 Filtro: después del preprocesamiento, toda fila y columna de M tiene
+  al menos `umbral` valores True (con `umbral >= k`).
 - CA-04 Descenso de gradiente genérico sobre f(x,y) = (x−1)² + (y−2)² +
   (x+y−6)², desde (0,0), con eta = 0,1 y epsilon = 1e-10: converge a (2, 3)
   con f = 3 (tolerancia 1e-4). [La tabla 2 del informe se genera con esta
@@ -142,6 +149,9 @@ Salidas:
 
 ## 12. Decisiones pendientes
 - V₀ del ejemplo de ALS a mano (sección 5 del informe).
-- Valores por defecto de k, eta, epsilon y max_iter para MovieLens: se
-  eligen corriendo la demo a mano y se documentan en `config.py` con el
-  criterio usado.
+
+Resuelto: los valores por defecto de `umbral`, k, eta, epsilon, max_iter,
+semilla y escala de inicialización para MovieLens se calibraron corriendo la
+demo y un experimento de calibración sobre MovieLens real, y quedaron
+definitivos en `config.py` (criterio documentado ahí; tablas completas y
+conclusión en specs/bitacora.md).

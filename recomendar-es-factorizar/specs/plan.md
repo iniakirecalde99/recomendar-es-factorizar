@@ -17,15 +17,22 @@ preguntas):
 3. **V₀ del ejemplo de ALS sigue pendiente.** CA-09 solo verifica que no haya
    `SistemaSingularError` y que la SCE decrezca. La comparación contra la
    tabla del informe queda como test `skip` con el motivo escrito.
-4. **Defaults de MovieLens: se eligen corriendo la demo a mano.** No hay
-   script de calibración (`scripts/calibrar.py` queda fuera de alcance).
-   `config.py` deja los valores marcados como pendientes hasta correr la
-   demo a mano; el criterio usado para elegirlos queda como comentario en
-   `config.py`, no en un script aparte.
-5. **`--k` como umbral y como dimensión latente es intencional.** El sistema
-   de cada fila en ALS es k×k y necesita al menos k datos observados para
-   tener solución única; el umbral de filtro es k por construcción, no un
-   parámetro independiente.
+4. **Defaults de MovieLens: calibrados sobre MovieLens real (resuelto).** No
+   hay script de calibración aparte (`scripts/calibrar.py` queda fuera de
+   alcance): se calibraron corriendo la demo y un experimento de
+   calibración a mano. `config.py` tiene los valores definitivos, con el
+   criterio de cada uno como comentario; tablas completas y conclusión en
+   specs/bitacora.md.
+5. **`umbral` y `k` son parámetros separados (corregido).** Originalmente
+   `--k` hacía las dos cosas (umbral de filtro y dimensión latente), con el
+   argumento de que el sistema de cada fila en ALS es k×k y necesita al
+   menos k datos observados para tener solución única. La calibración con
+   MovieLens real mostró que eso alcanza para que el sistema tenga
+   solución, pero no para que sea razonable: con `umbral == k == 5` ALS
+   tiró `SistemaSingularError`, y con `umbral == k == 10` las predicciones
+   fuera de Ω llegaron a ~1.7×10⁸. Por eso `umbral` es ahora un parámetro
+   propio de `filtrar_por_minimo` y de `--umbral` en la demo, con la única
+   restricción `umbral >= k` (si no, `UmbralInsuficienteError`).
 6. **`inicializar_factores` vive en `modelo.py`, compartida.** CLAUDE.md regla
    3 ya está ampliada para incluir la inicialización de U y V entre lo que
    comparten ALS y descenso de gradiente.
@@ -104,15 +111,15 @@ class ConjuntoCalificaciones:
   arma R (NaN en huecos) y M. No aplica ningún filtro.
   **Cubre:** CA-01.
 
-- `filtrar_por_minimo(datos: ConjuntoCalificaciones, k: int) -> ConjuntoCalificaciones`
-  Elimina iterativamente filas y columnas de M con menos de k valores True
-  hasta alcanzar un punto fijo, reindexa el resultado desde 0 y devuelve
-  mapeos actualizados (solo con los ids que sobrevivieron). k es el mismo
-  valor que la dimensión latente del modelo (ver decisión 5): el umbral no es
-  arbitrario, es el mínimo de datos por fila que necesita el sistema k×k de
-  ALS para tener solución única. Loguea (WARNING) cuántas películas, usuarios
-  y calificaciones se eliminaron. Lanza `ErrorDatosInsuficientes` si no queda
-  ninguna fila o columna.
+- `filtrar_por_minimo(datos: ConjuntoCalificaciones, umbral: int, k: int) -> ConjuntoCalificaciones`
+  Elimina iterativamente filas y columnas de M con menos de `umbral`
+  valores True hasta alcanzar un punto fijo, reindexa el resultado desde 0 y
+  devuelve mapeos actualizados (solo con los ids que sobrevivieron).
+  `umbral` es un parámetro propio, independiente de `k` (ver decisión 5,
+  corregida): tiene que ser >= k, si no lanza `UmbralInsuficienteError`.
+  Loguea (WARNING) cuántas películas, usuarios y calificaciones se
+  eliminaron. Lanza `ErrorDatosInsuficientes` si no queda ninguna fila o
+  columna.
   **Cubre:** CA-03.
 
 - `cargar_titulos(ruta_u_item: Path) -> dict[int, str]`
@@ -123,10 +130,11 @@ class ConjuntoCalificaciones:
   Invierte `id_pelicula_a_indice` y lo combina con `titulos_por_id` para
   obtener índice de columna de V → título.
 
-- `preparar_datos_movielens(ruta_u_data: Path, ruta_u_item: Path, k: int) -> DatosPreparados`
-  Orquesta `cargar_calificaciones`, `filtrar_por_minimo`, `cargar_titulos` y
-  `construir_indice_a_titulo`; pensada para ser el único punto de entrada que
-  usa `demo.py`. `DatosPreparados` es un dataclass con: `calificaciones:
+- `preparar_datos_movielens(ruta_u_data: Path, ruta_u_item: Path, umbral: int, k: int) -> DatosPreparados`
+  Orquesta `cargar_calificaciones`, `filtrar_por_minimo` (con `umbral`,
+  validado contra `k`), `cargar_titulos` y `construir_indice_a_titulo`;
+  pensada para ser el único punto de entrada que usa `demo.py`.
+  `DatosPreparados` es un dataclass con: `calificaciones:
   ConjuntoCalificaciones`, `titulos_por_indice: dict[int, str]`.
 
 ### `src/modelo.py` — módulo compartido (spec §5, §8; CLAUDE.md regla 3)
@@ -176,7 +184,9 @@ class ResultadoEntrenamiento:
   Ejecuta ALS (informe 3.5 y 5) alternando `resolver_factor(R, M, V)` y
   `resolver_factor(R.T, M.T, U)` a partir de `U0`, `V0`, usando `modelo.sce`
   para calcular f en cada iteración, hasta `|f(t+1) − f(t)| < epsilon` o
-  `max_iter`. Loguea INFO por iteración y WARNING si corta por `max_iter`.
+  `max_iter`. Loguea cada iteración en DEBUG; en INFO, una línea cada 100
+  iteraciones más el resumen final (iteraciones, motivo de corte, f final).
+  WARNING si corta por `max_iter`.
   **Cubre:** CA-06, CA-09 (a nivel algoritmo); soporta CA-10.
 
 ### `src/gradiente.py` (spec §7, informe 3.4 y 6)
@@ -206,8 +216,10 @@ class ResultadoDescensoGenerico:
   Descenso de gradiente completo sobre la factorización (informe 3.4 y 6): en
   cada iteración calcula `gradiente_sce` con (U, V) de la iteración t y
   actualiza ambos simultáneamente, usando `modelo.sce` para el criterio de
-  corte. Loguea INFO por iteración, WARNING si f aumenta o si corta por
-  `max_iter`.
+  corte. Loguea cada iteración en DEBUG; en INFO, una línea cada 100
+  iteraciones más el resumen final (iteraciones, motivo de corte, f final).
+  WARNING si f aumenta o si corta por `max_iter`. Lanza `DivergenciaError`
+  si f deja de ser finito (inf o NaN).
   **Cubre:** CA-08 (a nivel algoritmo); soporta CA-10.
 
 ### `src/comparacion.py` (spec §9)
@@ -256,17 +268,18 @@ class FilaComparacion:
 ### `src/demo.py` (spec §10) — único módulo con `print`
 
 - `construir_parser() -> argparse.ArgumentParser`
-  Define los argumentos `--datos`, `--grafico`, `--k`, `--eta`, `--epsilon`,
-  `--max-iter`, `--semilla`, `--usuario`, `--top-n`, con los defaults de
-  `config.py` (`RUTA_DATOS_DEFECTO`, `RUTA_GRAFICO_DEFECTO`, `K_DEFECTO`,
-  `ETA_DEFECTO`, `EPSILON_DEFECTO`, `MAX_ITER_DEFECTO`, `SEMILLA_DEFECTO`,
-  `USUARIO_DEFECTO`, `TOP_N_DEFECTO`). Sin `--rmse` (decisión 2) ni
-  `--metodo`: la demo siempre corre ALS y GD, para poder compararlos.
+  Define los argumentos `--datos`, `--grafico`, `--umbral`, `--k`, `--eta`,
+  `--epsilon`, `--max-iter`, `--semilla`, `--usuario`, `--top-n`, con los
+  defaults de `config.py` (`RUTA_DATOS_DEFECTO`, `RUTA_GRAFICO_DEFECTO`,
+  `UMBRAL_DEFECTO`, `K_DEFECTO`, `ETA_DEFECTO`, `EPSILON_DEFECTO`,
+  `MAX_ITER_DEFECTO`, `SEMILLA_DEFECTO`, `USUARIO_DEFECTO`,
+  `TOP_N_DEFECTO`). Sin `--rmse` (decisión 2) ni `--metodo`: la demo
+  siempre corre ALS y GD, para poder compararlos.
 
 - `_traducir_usuario(id_usuario_a_indice: dict[int, int], usuario_id: int) -> int`
   Traduce el id crudo de `--usuario` a índice de fila. Lanza
   `UsuarioNoEncontradoError` si `usuario_id` no está en el mapeo (no existe
-  en MovieLens, o el filtro por `--k` lo eliminó).
+  en MovieLens, o el filtro por `--umbral` lo eliminó).
 
 - `_formatear_top_n_lado_a_lado(recomendaciones_als: list[tuple[str, float]], recomendaciones_gd: list[tuple[str, float]]) -> str`
   Arma las recomendaciones de ALS y GD como dos columnas de texto plano,
@@ -275,7 +288,8 @@ class FilaComparacion:
 - `main(argv: list[str] | None = None) -> None`
   Reconfigura `sys.stdout` a UTF-8 al arrancar (`sys.stdout.reconfigure`,
   por consolas Windows con codepage heredado). Orquesta
-  `preparar_datos_movielens`, `_traducir_usuario`, `inicializar_factores`
+  `preparar_datos_movielens` (con `--umbral` y `--k`), `_traducir_usuario`,
+  `inicializar_factores`
   (una sola vez, U0/V0 compartidos), siempre `entrenar_als` y `entrenar_gd`,
   `comparar_metodos` + `formatear_tabla_comparacion`, `graficar_convergencia`
   (a `--grafico`), `recomendar_top_n` de ambos métodos (impresas lado a
@@ -297,28 +311,32 @@ class FilaComparacion:
 
 ## 3. Contenido de `src/config.py`
 
-Solo constantes (no lógica). k, eta, epsilon, max_iter y escala de
-inicialización para MovieLens quedan pendientes hasta correr la demo a mano
-y elegirlos (decisión 4); no hay script de calibración aparte, el criterio
-usado queda como comentario en este archivo. `TOP_N_DEFECTO` ya tiene valor
-(decisión 7). `RMSE_DEFECTO` se elimina (decisión 2). `USUARIO_DEFECTO`,
+Solo constantes (no lógica). `UMBRAL_DEFECTO`, `K_DEFECTO`, `ETA_DEFECTO`,
+`EPSILON_DEFECTO`, `MAX_ITER_DEFECTO`, `SEMILLA_DEFECTO` y
+`ESCALA_INICIALIZACION_DEFECTO` tienen valores definitivos (decisión 4,
+resuelta): se calibraron corriendo la demo y un experimento de calibración
+sobre MovieLens real; el criterio de cada uno queda como comentario en el
+archivo, y las tablas completas más la conclusión están en
+specs/bitacora.md. `TOP_N_DEFECTO` ya tenía valor (decisión 7).
+`RMSE_DEFECTO` se elimina (decisión 2). `USUARIO_DEFECTO`,
 `RUTA_DATOS_DEFECTO` y `RUTA_GRAFICO_DEFECTO` se agregaron con T14, para
 `--usuario`, `--datos` y `--grafico` de `demo.py`.
 
 ```python
-"""Valores por defecto de los hiperparámetros (algunos pendientes hasta correr la demo a mano — ver decisión 4)."""
+"""Valores por defecto de los hiperparámetros (definitivos, calibrados sobre MovieLens real — ver specs/bitacora.md)."""
 
 # --- Preprocesamiento y modelo ---
-K_DEFECTO: int = ...          # PENDIENTE (se completa corriendo la demo a mano) — umbral de filtro (§4) y dimensión latente (§5): mismo valor por diseño, ver decisión 5
-ETA_DEFECTO: float = ...      # PENDIENTE (se completa corriendo la demo a mano)
-EPSILON_DEFECTO: float = ...  # PENDIENTE (se completa corriendo la demo a mano)
-MAX_ITER_DEFECTO: int = ...   # PENDIENTE (se completa corriendo la demo a mano)
-SEMILLA_DEFECTO: int = ...    # PENDIENTE (se completa corriendo la demo a mano)
-ESCALA_INICIALIZACION_DEFECTO: float = ...  # PENDIENTE (se completa corriendo la demo a mano)
+UMBRAL_DEFECTO: int = 50      # primer umbral (20/50/100 probados) con max|r_hat| fuera de Ω < 7 para ALS y GD a la vez, con k=2; independiente de k (decisión 5, corregida), pero umbral >= k
+K_DEFECTO: int = 2            # el que menos amplifica |r_hat| fuera de Ω de los k probados (2, 3, 5) con umbral=50; evita el SistemaSingularError de umbral == k == 5
+ETA_DEFECTO: float = 2e-4     # de los eta probados (2e-4, 5e-4, 1e-3) con k=2, el único que converge por tolerancia sin que f aumente ni diverja
+EPSILON_DEFECTO: float = 1.0  # a la escala de la SCE sobre MovieLens filtrado (decenas de miles), corta en unas pocas decenas/cientos de iteraciones en vez de agotar max_iter
+MAX_ITER_DEFECTO: int = 3000  # GD con eta=2e-4 necesitó hasta ~1800 iteraciones en la calibración; deja margen sin alargar demasiado la demo
+SEMILLA_DEFECTO: int = 42     # arbitraria, solo para reproducibilidad (CA-10)
+ESCALA_INICIALIZACION_DEFECTO: float = 1.0  # U0, V0 uniformes en [0, 1), del orden de las calificaciones más chicas (1 a 5)
 
 # --- Demo ---
 TOP_N_DEFECTO: int = 10       # decisión 7: lo que entra cómodo en pantalla durante la demo
-USUARIO_DEFECTO: int = 1      # id crudo de MovieLens (no índice); si --k lo filtra, UsuarioNoEncontradoError
+USUARIO_DEFECTO: int = 1      # id crudo de MovieLens (no índice); si --umbral lo filtra, UsuarioNoEncontradoError
 RUTA_DATOS_DEFECTO: Path = Path("data/ml-100k")   # misma carpeta que scripts/descargar_movielens.py
 RUTA_GRAFICO_DEFECTO: Path = Path("convergencia.png")
 ```
@@ -340,10 +358,19 @@ class SistemaSingularError(ErrorFactorizacion):
     def __init__(self, fila: int, n_observados: int) -> None: ...
 
 
-class ErrorDatosInsuficientes(ErrorFactorizacion):
-    """El filtrado por k dejó una matriz sin filas o sin columnas."""
+class UmbralInsuficienteError(ErrorFactorizacion):
+    """El umbral del filtro es menor que k (decisión 5, corregida).
 
-    def __init__(self, k: int) -> None: ...
+    Atributos: umbral (pedido) y k (dimensión latente pedida).
+    """
+
+    def __init__(self, umbral: int, k: int) -> None: ...
+
+
+class ErrorDatosInsuficientes(ErrorFactorizacion):
+    """El filtrado por umbral mínimo dejó una matriz sin filas o sin columnas."""
+
+    def __init__(self, umbral: int) -> None: ...
 
 
 class ErrorDescargaDataset(ErrorFactorizacion):
@@ -409,7 +436,7 @@ importar.
 ## 6. Preguntas
 
 Ninguna pendiente: las preguntas originales quedaron resueltas y volcadas en
-la sección 0 (decisiones 1–8). Lo único que sigue abierto en la spec misma es
-lo que la decisión 3 y la decisión 4 dejan explícitamente para después: V₀
-del ejemplo de ALS y los valores numéricos de `config.py` (sección 12 de
+la sección 0 (decisiones 1–8; la decisión 4, sobre los valores de
+`config.py`, ya está resuelta). Lo único que sigue abierto en la spec misma
+es lo que deja la decisión 3: V₀ del ejemplo de ALS (sección 12 de
 `spec.md`).
