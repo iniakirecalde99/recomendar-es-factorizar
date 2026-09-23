@@ -6,8 +6,8 @@ completo. Una tarea no está terminada si algún test falla (incluidas las de
 tareas anteriores). Ninguna tarea toca más de dos módulos de `src/`.
 
 Orden: guarda transversal → datos y preprocesamiento → modelo → descenso de
-gradiente genérico → ALS → descenso de gradiente matricial → calibración de
-valores por defecto → comparación → recomendaciones → demo.
+gradiente genérico → ALS → descenso de gradiente matricial → comparación →
+recomendaciones → demo.
 
 Todo test que necesite el dataset real de MovieLens (al menos el de CA-01) se
 marca `@pytest.mark.movielens` y se saltea con motivo si `data/ml-100k/` no
@@ -74,49 +74,29 @@ punto fijo, reindexar y actualizar mapeos.
 (y un test adicional para `ErrorDatosInsuficientes` cuando el filtro vacía la
 matriz).
 
-### T05 — Partición train/test y filtrado del conjunto de prueba
-**Objetivo:** cargar `u1.base`/`u1.test` y reindexar la prueba con el mismo
-mapeo del entrenamiento filtrado, descartando lo que no está en el mapeo.
-**Archivos:** `src/datos.py` (`cargar_particion`, `aplicar_filtro_a_particion`).
-**Cierra:** ninguno (soporta spec §4 y §9; ver decisión 7 de `plan.md`).
-**Test que se escribe primero:** `test_datos.py::test_aplicar_filtro_a_particion_descarta_pares_fuera_del_mapeo`
-(incluye un caso de película presente en `u1.test` pero ausente de
-`u1.base`).
-
-### T06 — Títulos
+### T05 — Títulos
 **Objetivo:** cargar `u.item` y construir el mapeo índice de columna → título.
 **Archivos:** `src/datos.py` (`cargar_titulos`, `construir_indice_a_titulo`).
 **Cierra:** ninguno (soporta spec §10).
 **Test que se escribe primero:** `test_datos.py::test_cargar_titulos_y_construir_indice_a_titulo`
 (con un `u.item` de prueba chico en latin-1).
 
-### T07 — Orquestación de datos
-**Objetivo:** encadenar carga, filtro y títulos en un único punto de entrada
-para `demo.py`.
-**Archivos:** `src/datos.py` (`preparar_datos_movielens`, `DatosPreparados`).
-**Cierra:** ninguno.
-**Test que se escribe primero:** `test_datos.py::test_preparar_datos_movielens_integra_carga_filtro_y_titulos`.
-
 ## 2. Modelo
 
-### T08 — Predicción y SCE
-**Objetivo:** calcular R̂ = U·Vᵀ y la SCE sobre Ω, sin factor 1/2.
-**Archivos:** `src/modelo.py` (`predecir`, `sce`).
+### T06 — Predicción, SCE e inicialización compartida
+**Objetivo:** calcular R̂ = U·Vᵀ, la SCE sobre Ω sin factor 1/2, e
+inicializar U₀, V₀ uniformes en [0, escala) a partir de un `Generator`
+compartido entre ALS y GD.
+**Archivos:** `src/modelo.py` (`predecir`, `sce`, `inicializar_factores`,
+`ResultadoEntrenamiento`).
 **Cierra:** CA-02.
 **Test que se escribe primero:** `test_modelo.py::test_sce_ignora_valores_fuera_de_omega`
 (incluye reemplazar un NaN fuera de Ω por un número y verificar que `sce` no
-cambia).
-
-### T09 — Inicialización compartida
-**Objetivo:** generar U₀, V₀ uniformes en [0, escala) a partir de un
-`Generator`, y definir `ResultadoEntrenamiento`.
-**Archivos:** `src/modelo.py` (`inicializar_factores`, `ResultadoEntrenamiento`).
-**Cierra:** ninguno (building block de CA-10; ver decisión 6 de `plan.md`).
-**Test que se escribe primero:** `test_modelo.py::test_inicializar_factores_reproducible_con_la_misma_semilla`.
+cambia), y `test_modelo.py::test_inicializar_factores_reproducible_con_la_misma_semilla`.
 
 ## 3. Descenso de gradiente genérico
 
-### T10 — `descenso_gradiente` genérico
+### T07 — `descenso_gradiente` genérico
 **Objetivo:** descenso de gradiente completo para funciones de ℝⁿ, con
 criterio de corte por tolerancia o `max_iter`.
 **Archivos:** `src/gradiente.py` (`descenso_gradiente`, `ResultadoDescensoGenerico`).
@@ -126,7 +106,7 @@ criterio de corte por tolerancia o `max_iter`.
 
 ## 4. ALS
 
-### T11 — `resolver_factor`
+### T08 — `resolver_factor`
 **Objetivo:** resolver por fila las ecuaciones normales de mínimos cuadrados
 con `np.linalg.solve`, lanzando `SistemaSingularError` si corresponde.
 **Archivos:** `src/als.py` (`resolver_factor`), `src/errores.py`
@@ -135,112 +115,74 @@ con `np.linalg.solve`, lanzando `SistemaSingularError` si corresponde.
 **Test que se escribe primero:** `test_als.py::test_resolver_factor_transpuesto_coincide_con_calculo_manual_de_v`
 (y un test del caso singular, sin CA propio).
 
-### T12 — `entrenar_als`
+### T09 — `entrenar_als` y reproducibilidad
 **Objetivo:** alternar el paso de U y V hasta convergencia o `max_iter`,
-devolviendo `ResultadoEntrenamiento`.
+devolviendo `ResultadoEntrenamiento`, y verificar que la misma semilla
+produce exactamente el mismo resultado.
 **Archivos:** `src/als.py` (`entrenar_als`).
-**Cierra:** CA-06, CA-09 (parte activa).
+**Cierra:** CA-06, CA-09 (parte activa), CA-10 (ALS).
 **Test que se escribe primero:** `test_als.py::test_historial_de_sce_de_als_no_crece`,
-`test_als.py::test_als_ejemplo_4x5_no_lanza_singular_y_sce_decrece`, y
+`test_als.py::test_als_ejemplo_4x5_no_lanza_singular_y_sce_decrece`,
 `test_als.py::test_als_ejemplo_4x5_primera_iteracion_coincide_con_informe`
-marcado `skip` (motivo: V₀ del ejemplo todavía no está fijado en la spec).
+marcado `skip` (motivo: V₀ del ejemplo todavía no está fijado en la spec), y
+`test_reproducibilidad.py::test_misma_semilla_misma_ejecucion_als`.
 
 ## 5. Descenso de gradiente matricial
 
-### T13 — `gradiente_sce`
+### T10 — `gradiente_sce`
 **Objetivo:** calcular ∇_U f y ∇_V f sobre el mismo (U, V), sin factor 1/2.
 **Archivos:** `src/gradiente.py` (`gradiente_sce`).
 **Cierra:** CA-07.
 **Test que se escribe primero:** `test_gd_factorizacion.py::test_gradiente_sce_coincide_con_diferencias_finitas`.
 
-### T14 — `entrenar_gd`
+### T11 — `entrenar_gd` y reproducibilidad
 **Objetivo:** descenso de gradiente completo sobre la factorización,
-actualizando U y V simultáneamente con los valores de la iteración t.
+actualizando U y V simultáneamente con los valores de la iteración t, y
+verificar que la misma semilla produce exactamente el mismo resultado.
 **Archivos:** `src/gradiente.py` (`entrenar_gd`).
-**Cierra:** CA-08.
-**Test que se escribe primero:** `test_gd_factorizacion.py::test_iteracion_gd_es_simultanea_contra_referencia`.
-
-### T15 — Reproducibilidad de ALS y GD
-**Objetivo:** verificar que, con la misma semilla, ALS y GD dan exactamente
-los mismos resultados.
-**Archivos:** ninguno nuevo en `src/` (test que ejercita `modelo.py`,
-`als.py` y `gradiente.py` ya existentes).
-**Cierra:** CA-10.
-**Test que se escribe primero:** `test_reproducibilidad.py::test_misma_semilla_misma_ejecucion_als`,
+**Cierra:** CA-08, CA-10 (GD).
+**Test que se escribe primero:** `test_gd_factorizacion.py::test_iteracion_gd_es_simultanea_contra_referencia`,
 `test_reproducibilidad.py::test_misma_semilla_misma_ejecucion_gd`.
 
-## 6. Calibración de valores por defecto
+## 6. Comparación
 
-### T16 — Script de calibración y defaults en `config.py`
-**Objetivo:** `scripts/calibrar.py` corre ALS y GD sobre MovieLens real
-probando candidatos de k, eta, epsilon, max_iter, semilla y escala, y deja
-los valores elegidos en `config.py` con un comentario del criterio usado.
-**Archivos:** `scripts/calibrar.py`, `src/config.py`.
-**Cierra:** ninguno (condición previa para T22/T23 — la demo necesita estos
-defaults completos, ver decisión 4 de `plan.md`).
-**Test que se escribe primero:** `test_config.py::test_defaults_de_movielens_tienen_tipos_y_rangos_validos`
-— sin red ni dataset: valida que `K_DEFECTO` sea `int > 0`, `ETA_DEFECTO` y
-`EPSILON_DEFECTO` sean `float > 0`, `MAX_ITER_DEFECTO` sea `int > 0`,
-`SEMILLA_DEFECTO` sea `int`, y `ESCALA_INICIALIZACION_DEFECTO` sea
-`float > 0`. No valida los valores exactos ni corre nada sobre el dataset.
-`scripts/calibrar.py` en sí es una herramienta manual de calibración (como
-`scripts/descargar_movielens.py`, corre sobre datos reales); no lleva un test
-automático propio en esta tarea, solo se valida su resultado en `config.py`.
-
-## 7. Comparación
-
-### T17 — SCE sobre el conjunto de prueba
-**Objetivo:** calcular la SCE de R̂ sobre los pares reindexados de prueba.
-**Archivos:** `src/comparacion.py` (`sce_en_prueba`).
-**Cierra:** ninguno (soporta spec §9).
-**Test que se escribe primero:** `test_comparacion.py::test_sce_en_prueba_suma_errores_al_cuadrado_de_los_pares`.
-
-### T18 — Tabla de comparación
-**Objetivo:** armar una fila por método y formatearlas como texto plano con
-f-strings, sin dependencias nuevas.
+### T12 — Tabla de comparación y gráfico de convergencia
+**Objetivo:** armar una fila por método (iteraciones, motivo de corte,
+tiempo, SCE final) y formatearlas como texto plano con f-strings, sin
+dependencias nuevas; graficar f vs. iteración para ALS y GD en el mismo eje,
+escala log en y.
 **Archivos:** `src/comparacion.py` (`comparar_metodos`, `FilaComparacion`,
-`formatear_tabla_comparacion`).
-**Cierra:** ninguno (soporta spec §9; ver decisión 9 de `plan.md`).
+`formatear_tabla_comparacion`, `graficar_convergencia`).
+**Cierra:** ninguno (soporta spec §9; ver decisiones 2 y 8 de `plan.md` —
+sin partición entrenamiento/prueba, una sola SCE por método).
 **Test que se escribe primero:** `test_comparacion.py::test_comparar_metodos_arma_una_fila_por_metodo`,
-`test_comparacion.py::test_formatear_tabla_comparacion_incluye_las_columnas_esperadas`.
-
-### T19 — Gráfico de convergencia
-**Objetivo:** graficar f vs. iteración para ALS y GD en el mismo eje, escala
-log en y.
-**Archivos:** `src/comparacion.py` (`graficar_convergencia`).
-**Cierra:** ninguno (soporta spec §9).
-**Test que se escribe primero:** `test_comparacion.py::test_graficar_convergencia_guarda_archivo_en_ruta_dada`
+`test_comparacion.py::test_formatear_tabla_comparacion_incluye_las_columnas_esperadas`,
+`test_comparacion.py::test_graficar_convergencia_guarda_archivo_en_ruta_dada`
 (solo verifica que el archivo se crea, no el contenido visual).
 
-## 8. Recomendaciones
+## 7. Recomendaciones
 
-### T20 — Top-N
+### T13 — Top-N y extremos por factor latente
 **Objetivo:** recomendar las n películas no calificadas por un usuario con
-mayor r̂ᵢⱼ.
-**Archivos:** `src/recomendaciones.py` (`recomendar_top_n`).
-**Cierra:** CA-11.
-**Test que se escribe primero:** `test_recomendaciones.py::test_top_n_excluye_peliculas_ya_calificadas`.
-
-### T21 — Extremos por factor latente
-**Objetivo:** para cada columna de V, listar las películas con mayor y menor
+mayor r̂ᵢⱼ, y para cada columna de V listar las películas con mayor y menor
 valor, sin etiquetar el factor.
-**Archivos:** `src/recomendaciones.py` (`extremos_por_factor`).
-**Cierra:** ninguno (soporta spec §10).
-**Test que se escribe primero:** `test_recomendaciones.py::test_extremos_por_factor_devuelve_la_cantidad_pedida_por_columna`.
+**Archivos:** `src/recomendaciones.py` (`recomendar_top_n`,
+`extremos_por_factor`).
+**Cierra:** CA-11.
+**Test que se escribe primero:** `test_recomendaciones.py::test_top_n_excluye_peliculas_ya_calificadas`,
+`test_recomendaciones.py::test_extremos_por_factor_devuelve_la_cantidad_pedida_por_columna`.
 
-## 9. Demo
+## 8. Demo
 
-### T22 — CLI
-**Objetivo:** definir los argumentos de `python -m src.demo` con los
-defaults de `config.py` (sin `--rmse`).
-**Archivos:** `src/demo.py` (`construir_parser`).
+### T14 — Demo completa
+**Objetivo:** encadenar carga, filtro y títulos en `preparar_datos_movielens`;
+definir los argumentos de `python -m src.demo` con los defaults de
+`config.py` (sin `--rmse`); correr el flujo completo (datos → inicialización
+→ entrenar → comparar → graficar → recomendar) e imprimir los resultados.
+**Archivos:** `src/datos.py` (`preparar_datos_movielens`, `DatosPreparados`),
+`src/demo.py` (`construir_parser`, `main`).
 **Cierra:** ninguno.
-**Test que se escribe primero:** `test_demo.py::test_construir_parser_expone_los_argumentos_esperados_y_defaults`.
-
-### T23 — Orquestación de la demo
-**Objetivo:** correr el flujo completo (datos → inicialización → entrenar →
-comparar → graficar → recomendar) e imprimir los resultados.
-**Archivos:** `src/demo.py` (`main`).
-**Cierra:** ninguno.
-**Test que se escribe primero:** `test_demo.py::test_main_corre_extremo_a_extremo_sobre_dataset_chico_sin_lanzar_excepciones`
+**Test que se escribe primero:** `test_datos.py::test_preparar_datos_movielens_integra_carga_filtro_y_titulos`,
+`test_demo.py::test_construir_parser_expone_los_argumentos_esperados_y_defaults`,
+`test_demo.py::test_main_corre_extremo_a_extremo_sobre_dataset_chico_sin_lanzar_excepciones`
 (con fixtures chicas en `tests/`, no la MovieLens real).

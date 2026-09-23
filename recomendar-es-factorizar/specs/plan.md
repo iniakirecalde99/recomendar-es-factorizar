@@ -12,15 +12,16 @@ preguntas):
 1. **Sin factor ½.** La pérdida es la SCE (suma de cuadrados del error, informe
    3.5), sin ½. La función se llama `sce` en el código.
 2. **RMSE afuera.** No hay `calcular_rmse_en_prueba` ni flag `--rmse`. La
-   comparación en la sección 9 se hace con SCE sobre el conjunto de prueba,
-   igual para ambos métodos.
+   comparación en la sección 9 se hace con SCE sobre Ω del conjunto completo
+   filtrado, igual para ambos métodos.
 3. **V₀ del ejemplo de ALS sigue pendiente.** CA-09 solo verifica que no haya
    `SistemaSingularError` y que la SCE decrezca. La comparación contra la
    tabla del informe queda como test `skip` con el motivo escrito.
-4. **Defaults de MovieLens: tarea de calibración aparte.** `config.py` los deja
-   marcados como pendientes; esa tarea de calibración tiene que preceder a la
-   tarea de la demo en `tasks.md`, porque la demo no puede arrancar con
-   `config.py` incompleto.
+4. **Defaults de MovieLens: se eligen corriendo la demo a mano.** No hay
+   script de calibración (`scripts/calibrar.py` queda fuera de alcance).
+   `config.py` deja los valores marcados como pendientes hasta correr la
+   demo a mano; el criterio usado para elegirlos queda como comentario en
+   `config.py`, no en un script aparte.
 5. **`--k` como umbral y como dimensión latente es intencional.** El sistema
    de cada fila en ALS es k×k y necesita al menos k datos observados para
    tener solución única; el umbral de filtro es k por construcción, no un
@@ -28,18 +29,13 @@ preguntas):
 6. **`inicializar_factores` vive en `modelo.py`, compartida.** CLAUDE.md regla
    3 ya está ampliada para incluir la inicialización de U y V entre lo que
    comparten ALS y descenso de gradiente.
-7. **Espacio de ids en `u1.test`: los mismos ids crudos (desde 1) que en
-   `u1.base`/`u.data`.** El mapeo id→índice se construye una sola vez a
-   partir del entrenamiento ya filtrado; la prueba se traduce con ese mismo
-   mapeo, y todo par cuyo usuario o película no esté en el mapeo se descarta
-   y se loguea (§4) — esto incluye películas que aparecen en `u1.test` pero
-   nunca en `u1.base`, que las hay.
-8. **`TOP_N_DEFECTO = 10`.**
-9. **Tabla por consola: texto plano con f-strings, sin dependencias nuevas**
+7. **`TOP_N_DEFECTO = 10`.**
+8. **Tabla por consola: texto plano con f-strings, sin dependencias nuevas**
    (nada de pandas ni tabulate). Columnas: método, iteraciones, motivo de
-   corte, tiempo (s), SCE entrenamiento, SCE prueba. Los decimales usan
-   punto en el código; el pasaje a coma para pegar en el informe es manual,
-   fuera del código.
+   corte, tiempo (s), SCE final. Sin partición entrenamiento/prueba (ver
+   decisión 2): una sola SCE por método, sobre Ω del conjunto completo
+   filtrado. Los decimales usan punto en el código; el pasaje a coma para
+   pegar en el informe es manual, fuera del código.
 
 ## 1. Estructura de carpetas
 
@@ -119,24 +115,6 @@ class ConjuntoCalificaciones:
   ninguna fila o columna.
   **Cubre:** CA-03.
 
-- `cargar_particion(ruta_base: Path, ruta_test: Path) -> tuple[ConjuntoCalificaciones, list[tuple[int, int, float]]]`
-  Carga `u1.base` como `ConjuntoCalificaciones` (igual que
-  `cargar_calificaciones`) y `u1.test` como lista de tripletas
-  `(id_usuario_crudo, id_pelicula_crudo, calificación)`, sin reindexar
-  todavía.
-
-- `aplicar_filtro_a_particion(entrenamiento: ConjuntoCalificaciones, prueba_cruda: list[tuple[int, int, float]], k: int) -> tuple[ConjuntoCalificaciones, list[tuple[int, int, float]]]`
-  Filtra `entrenamiento` con `filtrar_por_minimo` y, con los mapeos
-  resultantes (construidos una sola vez a partir del entrenamiento ya
-  filtrado), reindexa `prueba_cruda` traduciendo cada id crudo de `u1.test`
-  con esos mismos mapeos. Los ids de `u1.test` están en el mismo espacio que
-  `u.data`/`u1.base` (decisión 7). Descarta y loguea (WARNING) todo par cuyo
-  usuario o película no esté en el mapeo — ya sea porque el filtro lo
-  eliminó o porque nunca apareció en `u1.base` (hay películas de `u1.test`
-  en ese caso).
-  **Cubre:** CA-03 (junto con `filtrar_por_minimo`); soporta la evaluación de
-  la sección 9.
-
 - `cargar_titulos(ruta_u_item: Path) -> dict[int, str]`
   Carga `u.item` (codificación latin-1, separado por `|`) y devuelve el
   mapeo id de película crudo → título.
@@ -145,12 +123,11 @@ class ConjuntoCalificaciones:
   Invierte `id_pelicula_a_indice` y lo combina con `titulos_por_id` para
   obtener índice de columna de V → título.
 
-- `preparar_datos_movielens(directorio_datos: Path, k: int) -> DatosPreparados`
-  Orquesta `cargar_particion`, `aplicar_filtro_a_particion`, `cargar_titulos`
-  y `construir_indice_a_titulo`; pensada para ser el único punto de entrada
-  que usa `demo.py`. `DatosPreparados` es un dataclass con: `entrenamiento:
-  ConjuntoCalificaciones`, `prueba: list[tuple[int, int, float]]`,
-  `titulos_por_indice: dict[int, str]`.
+- `preparar_datos_movielens(ruta_u_data: Path, ruta_u_item: Path, k: int) -> DatosPreparados`
+  Orquesta `cargar_calificaciones`, `filtrar_por_minimo`, `cargar_titulos` y
+  `construir_indice_a_titulo`; pensada para ser el único punto de entrada que
+  usa `demo.py`. `DatosPreparados` es un dataclass con: `calificaciones:
+  ConjuntoCalificaciones`, `titulos_por_indice: dict[int, str]`.
 
 ### `src/modelo.py` — módulo compartido (spec §5, §8; CLAUDE.md regla 3)
 
@@ -242,28 +219,22 @@ class FilaComparacion:
     n_iteraciones: int
     motivo_corte: str
     tiempo_segundos: float
-    sce_final_entrenamiento: float
-    sce_prueba: float
+    sce_final: float
 ```
 
-- `sce_en_prueba(U: np.ndarray, V: np.ndarray, pares_prueba: list[tuple[int, int, float]]) -> float`
-  SCE de R̂ = U·Vᵀ sobre los pares reindexados del conjunto de prueba (informe
-  sección 7): Σ (rᵢⱼ − uᵢ·vⱼ)² para cada (i, j, rᵢⱼ) de `pares_prueba`. Sin
-  RMSE (decisión 2): la comparación entre métodos usa esta misma magnitud
-  para ambos.
-
-- `comparar_metodos(resultado_als: ResultadoEntrenamiento, resultado_gd: ResultadoEntrenamiento, pares_prueba: list[tuple[int, int, float]]) -> list[FilaComparacion]`
-  Arma una fila por método con iteraciones, motivo de corte, tiempo, SCE
-  final de entrenamiento (último valor de `historial_f`) y SCE de prueba
-  (`sce_en_prueba`).
+- `comparar_metodos(resultado_als: ResultadoEntrenamiento, resultado_gd: ResultadoEntrenamiento) -> list[FilaComparacion]`
+  Arma una fila por método con iteraciones, motivo de corte, tiempo y SCE
+  final (último valor de `historial_f`). Sin RMSE (decisión 2) y sin
+  partición entrenamiento/prueba: la SCE es la del conjunto completo
+  filtrado, la misma que ya calculó `entrenar_als`/`entrenar_gd` sobre Ω.
 
 - `formatear_tabla_comparacion(filas: list[FilaComparacion]) -> str`
   Arma la tabla de la sección 9 como texto plano alineado con f-strings, sin
-  agregar dependencias (nada de pandas ni tabulate — decisión 9). Columnas:
-  método, iteraciones, motivo de corte, tiempo (s), SCE entrenamiento, SCE
-  prueba. Decimales con punto; la conversión a coma para pegar en el informe
-  es manual, fuera del código. Devuelve el texto listo para imprimir —
-  `demo.py` es quien hace el `print` (único módulo con `print`).
+  agregar dependencias (nada de pandas ni tabulate — decisión 8). Columnas:
+  método, iteraciones, motivo de corte, tiempo (s), SCE final. Decimales con
+  punto; la conversión a coma para pegar en el informe es manual, fuera del
+  código. Devuelve el texto listo para imprimir — `demo.py` es quien hace el
+  `print` (único módulo con `print`).
 
 - `graficar_convergencia(resultado_als: ResultadoEntrenamiento, resultado_gd: ResultadoEntrenamiento, ruta_salida: Path | None) -> None`
   Grafica f (SCE) vs. iteración para ALS y GD en el mismo eje, escala
@@ -311,25 +282,24 @@ class FilaComparacion:
 ## 3. Contenido de `src/config.py`
 
 Solo constantes (no lógica). k, eta, epsilon, max_iter y escala de
-inicialización para MovieLens quedan pendientes de una tarea de calibración
-específica (decisión 4); esa tarea tiene que ir **antes** que la tarea de la
-demo en `tasks.md`, porque `demo.py` necesita estos defaults para poder
-correr. `TOP_N_DEFECTO` ya tiene valor (decisión 8). `RMSE_DEFECTO` se
-elimina (decisión 2).
+inicialización para MovieLens quedan pendientes hasta correr la demo a mano
+y elegirlos (decisión 4); no hay script de calibración aparte, el criterio
+usado queda como comentario en este archivo. `TOP_N_DEFECTO` ya tiene valor
+(decisión 7). `RMSE_DEFECTO` se elimina (decisión 2).
 
 ```python
-"""Valores por defecto de los hiperparámetros (algunos pendientes de una tarea de calibración — ver tasks.md)."""
+"""Valores por defecto de los hiperparámetros (algunos pendientes hasta correr la demo a mano — ver decisión 4)."""
 
 # --- Preprocesamiento y modelo ---
-K_DEFECTO: int = ...          # PENDIENTE (tarea de calibración) — umbral de filtro (§4) y dimensión latente (§5): mismo valor por diseño, ver decisión 5
-ETA_DEFECTO: float = ...      # PENDIENTE (tarea de calibración)
-EPSILON_DEFECTO: float = ...  # PENDIENTE (tarea de calibración)
-MAX_ITER_DEFECTO: int = ...   # PENDIENTE (tarea de calibración)
-SEMILLA_DEFECTO: int = ...    # PENDIENTE (tarea de calibración)
-ESCALA_INICIALIZACION_DEFECTO: float = ...  # PENDIENTE (tarea de calibración)
+K_DEFECTO: int = ...          # PENDIENTE (se completa corriendo la demo a mano) — umbral de filtro (§4) y dimensión latente (§5): mismo valor por diseño, ver decisión 5
+ETA_DEFECTO: float = ...      # PENDIENTE (se completa corriendo la demo a mano)
+EPSILON_DEFECTO: float = ...  # PENDIENTE (se completa corriendo la demo a mano)
+MAX_ITER_DEFECTO: int = ...   # PENDIENTE (se completa corriendo la demo a mano)
+SEMILLA_DEFECTO: int = ...    # PENDIENTE (se completa corriendo la demo a mano)
+ESCALA_INICIALIZACION_DEFECTO: float = ...  # PENDIENTE (se completa corriendo la demo a mano)
 
 # --- Demo ---
-TOP_N_DEFECTO: int = 10       # decisión 8: lo que entra cómodo en pantalla durante la demo
+TOP_N_DEFECTO: int = 10       # decisión 7: lo que entra cómodo en pantalla durante la demo
 ```
 
 ## 4. Contenido de `src/errores.py`
@@ -398,8 +368,8 @@ importar.
 
 ## 6. Preguntas
 
-Ninguna pendiente: las nueve preguntas originales quedaron resueltas y
-volcadas en la sección 0 (decisiones 1–9). Lo único que sigue abierto en la
-spec misma es lo que la decisión 3 y la decisión 4 dejan explícitamente para
-después: V₀ del ejemplo de ALS y los valores numéricos de `config.py`
-(sección 12 de `spec.md`).
+Ninguna pendiente: las preguntas originales quedaron resueltas y volcadas en
+la sección 0 (decisiones 1–8). Lo único que sigue abierto en la spec misma es
+lo que la decisión 3 y la decisión 4 dejan explícitamente para después: V₀
+del ejemplo de ALS y los valores numéricos de `config.py` (sección 12 de
+`spec.md`).

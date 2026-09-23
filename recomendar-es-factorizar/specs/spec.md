@@ -22,9 +22,8 @@ rendimiento más allá de numpy vectorizado.
   lo descomprime e informa si ya existe. Si no hay red, falla con un mensaje
   claro indicando dónde descargarlo a mano.
 - Archivos usados: `u.data` (usuario, película, calificación, timestamp,
-  separados por tab) para el dataset completo; `u1.base` y `u1.test` para la
-  separación entrenamiento/prueba; `u.item` (codificación latin-1, separado por
-  `|`) para los títulos.
+  separados por tab) para el dataset completo; `u.item` (codificación
+  latin-1, separado por `|`) para los títulos.
 - Los ids del archivo empiezan en 1; internamente se reindexan desde 0 y se
   guarda el mapeo para poder mostrar títulos.
 
@@ -34,10 +33,9 @@ rendimiento más allá de numpy vectorizado.
   entrenamiento, y los usuarios con menos de k calificaciones. Repetir hasta que
   no se elimine nada. Motivo: sin regularización, el paso de ALS de una fila con
   menos de k datos no tiene solución única.
-- Reindexar después del filtro. Descartar del conjunto de prueba los pares cuyo
-  usuario o película fue filtrado.
-- Loguear (WARNING) cuántas películas, usuarios y calificaciones se eliminaron,
-  en entrenamiento y en prueba. Ese número va a la sección 8 del informe.
+- Reindexar después del filtro.
+- Loguear (WARNING) cuántas películas, usuarios y calificaciones se
+  eliminaron. Ese número va a la sección 8 del informe.
 - El umbral del filtro es el mismo k de la factorización, no un parámetro
   aparte: en ALS el sistema de cada fila es de k × k y necesita al menos k
   datos observados.
@@ -84,12 +82,10 @@ cantidad de iteraciones, tiempo total, y el motivo del corte (tolerancia o
 max_iter).
 
 ## 9. Evaluación y comparación (informe secciones 7 y 8)
-- Pérdida sobre Ω de entrenamiento y suma de errores al cuadrado sobre el
-  conjunto de prueba, para ambos métodos, con la misma inicialización y el
-  mismo k.
+- SCE sobre Ω del conjunto completo filtrado, para ambos métodos, con la
+  misma inicialización y el mismo k.
 - Gráfico: f vs. iteración para ALS y GD en el mismo eje (escala log en y).
-- Tabla por consola: iteraciones, tiempo, f final de entrenamiento, error de
-  prueba.
+- Tabla por consola: iteraciones, tiempo, f final.
 
 ## 10. Demo (`python -m src.demo`)
 Argumentos: `--metodo {als,gd,ambos}`, `--k`, `--eta`, `--epsilon`,
@@ -142,5 +138,5 @@ Salidas:
 ## 12. Decisiones pendientes
 - V₀ del ejemplo de ALS a mano (sección 5 del informe).
 - Valores por defecto de k, eta, epsilon y max_iter para MovieLens: se
-  calibran en una tarea específica y se documentan en `config.py` con el
+  eligen corriendo la demo a mano y se documentan en `config.py` con el
   criterio usado.
