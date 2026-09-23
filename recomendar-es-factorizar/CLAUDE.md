@@ -14,6 +14,9 @@ implementada tiene que coincidir con la del informe.
 - No modificar `spec.md` sin aprobación explícita.
 - Una tarea por vez: primero el test, después el código, después correr toda la
   suite. Una tarea no está terminada si algún test falla.
+- Al cerrar una tarea con todos los tests en verde, commiteá solo los
+  archivos que la tarea lista, con el mensaje "Txx: <objetivo>". No
+  commitees nada fuera de una tarea sin preguntar.
 
 ## Stack
 - Python 3.11+, numpy, matplotlib (solo gráficos de la demo), pytest.
