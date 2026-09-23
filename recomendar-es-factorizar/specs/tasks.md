@@ -129,7 +129,7 @@ marcado `skip` (motivo: V₀ del ejemplo todavía no está fijado en la spec), y
 
 ## 5. Descenso de gradiente matricial
 
-### [ ] T10 — `gradiente_sce`
+### [x] T10 — `gradiente_sce`
 **Objetivo:** calcular ∇_U f y ∇_V f sobre el mismo (U, V), sin factor 1/2.
 **Archivos:** `src/gradiente.py` (`gradiente_sce`).
 **Cierra:** CA-07.
