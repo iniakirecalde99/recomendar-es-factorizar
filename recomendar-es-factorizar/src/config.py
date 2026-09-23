@@ -1,11 +1,13 @@
 """Valores por defecto de los hiperparámetros de la demo (spec §10, plan.md §3).
 
-PROVISORIO: todos los valores de este archivo se fijaron a mano para poder
-cerrar T14, sin correr la demo sobre MovieLens real (no hay dataset real en
-este entorno — ver specs/bitacora.md). Hay que recalibrarlos corriendo la
-demo sobre el dataset real (decisión 4 de plan.md) antes de usar estos
-números para las conclusiones del informe.
+PROVISORIO: los hiperparámetros de MovieLens de este archivo se fijaron a
+mano para poder cerrar T14, sin correr la demo sobre MovieLens real (no hay
+dataset real en este entorno — ver specs/bitacora.md). Hay que recalibrarlos
+corriendo la demo sobre el dataset real (decisión 4 de plan.md) antes de
+usar estos números para las conclusiones del informe.
 """
+
+from pathlib import Path
 
 # --- Preprocesamiento y modelo ---
 
@@ -47,3 +49,15 @@ TOP_N_DEFECTO: int = 10
 # PROVISORIO: calibrar sobre MovieLens real. Motivo (decisión 7 de
 # plan.md): lo que entra cómodo en pantalla durante la demo; a diferencia
 # de los anteriores, no depende de la escala del dataset.
+
+USUARIO_DEFECTO: int = 1
+# Id crudo de usuario de MovieLens (no índice reindexado): el primer id del
+# archivo. Si el --k pedido lo filtra, main() lanza UsuarioNoEncontradoError
+# con un mensaje claro en vez de fallar con un error críptico de índice.
+
+RUTA_DATOS_DEFECTO: Path = Path("data/ml-100k")
+# Carpeta con `u.data` y `u.item`, la misma que usa scripts/descargar_movielens.py.
+
+RUTA_GRAFICO_DEFECTO: Path = Path("convergencia.png")
+# Dónde se guarda el gráfico de convergencia (spec §9); no hay un criterio
+# más allá de que quede al lado de donde se corrió la demo.

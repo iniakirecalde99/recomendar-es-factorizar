@@ -246,3 +246,90 @@ Todo T11–T14 queda commiteado (ver commits de esta sesión), junto con
 calibrar sobre MovieLens real` en cada uno): hace falta correrlos contra el
 dataset real antes de usar los números que salgan de la demo para el
 informe.
+
+## T14 — Ajustes posteriores (5 puntos, aprobado modificar spec.md §10 y plan.md)
+
+Aprobado explícitamente por el usuario: modificar `spec.md` §10 y `plan.md`
+(sección `src/demo.py`, más las dos excepciones nuevas en la sección
+`src/errores.py` y las tres constantes nuevas en `src/config.py`, por
+consistencia con lo que ya describían esas secciones).
+
+### Rojo
+
+```
+7 failed
+- test_construir_parser_...: assert not True (args.metodo seguía existiendo)
+- test_traducir_usuario_...: AttributeError: module 'src.demo' has no attribute '_traducir_usuario' (x2)
+- test_formatear_top_n_lado_a_lado_...: AttributeError: no attribute '_formatear_top_n_lado_a_lado'
+- test_main_..., test_main_propaga_..., test_main_captura_...: SystemExit: 2
+  (argparse: unrecognized arguments: --datos ... --grafico ...)
+```
+
+### Verde
+
+```
+....s......s..........................                                   [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_als.py:83: V0 del ejemplo de la sección 5 del informe todavía no está fijado (spec.md §12)
+SKIPPED [1] tests\test_datos.py:46: requiere el dataset real de MovieLens en .../data/ml-100k (correr scripts/descargar_movielens.py)
+36 passed, 2 skipped, 2 warnings in 0.82s
+```
+
+(los 2 warnings son `RuntimeWarning: overflow encountered in square`,
+esperados: son justamente los tests que fuerzan la divergencia con un eta
+enorme.)
+
+### Cambios, punto por punto
+
+1. **`--usuario` recibe el id crudo.** `UsuarioNoEncontradoError` nueva en
+   `errores.py`. `_traducir_usuario(id_usuario_a_indice, usuario_id)` nueva
+   en `demo.py`, testeada aislada (sin correr `main`). `USUARIO_DEFECTO = 1`
+   en `config.py` (sin comentario `PROVISORIO`: a diferencia de los
+   hiperparámetros numéricos, no necesita calibrarse contra el dataset —
+   si el `--k` pedido lo filtra, el error explica qué pasó).
+2. **Sin `--metodo`.** `main` corre siempre `entrenar_als` y `entrenar_gd`.
+   Se borró `_fila_individual` (ya no hace falta: `comparar_metodos` se usa
+   siempre, con ambos resultados). Top-N: `_formatear_top_n_lado_a_lado`
+   nueva, testeada aislada, arma dos columnas de texto plano (ALS | GD).
+   Extremos por factor: solo `resultado_als.V`, con una línea aclarando en
+   la salida que GD no se usa para esa parte (no había forma de "mezclar"
+   extremos de dos factorizaciones distintas de manera significativa).
+3. **`--datos` y `--grafico` en vez de constantes de módulo.** Antes
+   `RUTA_DATOS_DEFECTO`/`RUTA_GRAFICO_DEFECTO` vivían en `demo.py` y el test
+   de punta a punta las pisaba con `monkeypatch.setattr`; ahora son
+   constantes de `config.py` usadas como default de `--datos`/`--grafico`
+   (`type=Path`), y el test pasa las rutas de `tmp_path` directo por
+   `argv`, sin monkeypatch.
+4. **`sys.stdout.reconfigure(encoding="utf-8")`** como primera línea de
+   `main` (antes de cualquier `print`). Motivo: la corrida manual anterior
+   de `python -m src.demo --help` había fallado con `UnicodeEncodeError`
+   en una consola Bash con codepage cp1252 (ver bitácora de T14, entrada
+   anterior) — con esto, correrlo desde una consola así ya no debería
+   fallar. Confirmado que no rompe `capsys` en los tests (el objeto que
+   pytest pone en `sys.stdout` también soporta `.reconfigure()`).
+5. **`main` captura `DivergenciaError`** alrededor de las dos llamadas de
+   entrenamiento (`entrenar_als` y `entrenar_gd`) y hace `print(f"\nError:
+   {error}")` sin relanzar — se pierde el resultado de ALS si ya había
+   corrido, a cambio de un mensaje limpio en vez de traceback. Test nuevo
+   (`test_main_captura_divergenciaerror_y_no_propaga_traceback`) usa el
+   mismo truco que el test de `entrenar_gd` (T11): `eta=1e10` sobre la
+   matriz chica de la demo.
+
+### Decisiones de diseño adicionales (no pedidas explícitamente, pero necesarias para cerrar los 5 puntos)
+
+- `UsuarioNoEncontradoError` NO se captura en `main` (a diferencia de
+  `DivergenciaError`): se deja propagar sin envolver, igual que
+  `SistemaSingularError`/`ErrorDatosInsuficientes` en el resto del código
+  — el usuario pidió explícitamente capturar solo `DivergenciaError`.
+- El ancho de columna de `_formatear_top_n_lado_a_lado` (40 caracteres) es
+  una decisión de formato sin fuente en la spec, igual que los anchos de
+  `formatear_tabla_comparacion` (T12).
+- Se actualizó también la sección `src/errores.py` de `plan.md` (agregando
+  `DivergenciaError`, que databa de la sesión anterior y nunca se había
+  documentado ahí, y `UsuarioNoEncontradoError`) y la sección
+  `src/config.py` (las tres constantes nuevas), para que `plan.md` no quede
+  inconsistente con el código — no estaba en la aprobación explícita del
+  usuario (que mencionó "spec.md §10 y plan.md (src/demo.py)"), pero
+  dejarlas sin actualizar hacía que el propio texto de la sección
+  `src/demo.py` de `plan.md` mencionara excepciones y constantes no
+  documentadas en ningún otro lado del mismo archivo.

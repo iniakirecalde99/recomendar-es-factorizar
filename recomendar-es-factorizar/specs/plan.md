@@ -256,17 +256,33 @@ class FilaComparacion:
 ### `src/demo.py` (spec §10) — único módulo con `print`
 
 - `construir_parser() -> argparse.ArgumentParser`
-  Define los argumentos `--metodo {als,gd,ambos}`, `--k`, `--eta`,
-  `--epsilon`, `--max-iter`, `--semilla`, `--usuario`, `--top-n`, con los
-  defaults de `config.py`. Sin `--rmse` (decisión 2).
+  Define los argumentos `--datos`, `--grafico`, `--k`, `--eta`, `--epsilon`,
+  `--max-iter`, `--semilla`, `--usuario`, `--top-n`, con los defaults de
+  `config.py` (`RUTA_DATOS_DEFECTO`, `RUTA_GRAFICO_DEFECTO`, `K_DEFECTO`,
+  `ETA_DEFECTO`, `EPSILON_DEFECTO`, `MAX_ITER_DEFECTO`, `SEMILLA_DEFECTO`,
+  `USUARIO_DEFECTO`, `TOP_N_DEFECTO`). Sin `--rmse` (decisión 2) ni
+  `--metodo`: la demo siempre corre ALS y GD, para poder compararlos.
+
+- `_traducir_usuario(id_usuario_a_indice: dict[int, int], usuario_id: int) -> int`
+  Traduce el id crudo de `--usuario` a índice de fila. Lanza
+  `UsuarioNoEncontradoError` si `usuario_id` no está en el mapeo (no existe
+  en MovieLens, o el filtro por `--k` lo eliminó).
+
+- `_formatear_top_n_lado_a_lado(recomendaciones_als: list[tuple[str, float]], recomendaciones_gd: list[tuple[str, float]]) -> str`
+  Arma las recomendaciones de ALS y GD como dos columnas de texto plano,
+  lado a lado.
 
 - `main(argv: list[str] | None = None) -> None`
-  Orquesta `preparar_datos_movielens`, `inicializar_factores` (una sola vez,
-  U0/V0 compartidos), `entrenar_als`/`entrenar_gd` según `--metodo`,
-  `comparar_metodos` + `formatear_tabla_comparacion`, `graficar_convergencia`,
-  `recomendar_top_n` y `extremos_por_factor`; imprime el resumen de
-  preprocesamiento, la tabla de comparación y las recomendaciones. Configura
-  logging (INFO por defecto).
+  Reconfigura `sys.stdout` a UTF-8 al arrancar (`sys.stdout.reconfigure`,
+  por consolas Windows con codepage heredado). Orquesta
+  `preparar_datos_movielens`, `_traducir_usuario`, `inicializar_factores`
+  (una sola vez, U0/V0 compartidos), siempre `entrenar_als` y `entrenar_gd`,
+  `comparar_metodos` + `formatear_tabla_comparacion`, `graficar_convergencia`
+  (a `--grafico`), `recomendar_top_n` de ambos métodos (impresas lado a
+  lado con `_formatear_top_n_lado_a_lado`) y `extremos_por_factor` solo del
+  V de ALS (aclarado en la salida: GD no se usa para esta parte). Si
+  `entrenar_gd` lanza `DivergenciaError`, la captura y muestra solo el
+  mensaje, sin traceback. Configura logging (INFO por defecto).
 
 ### `scripts/descargar_movielens.py` (spec §3)
 
@@ -285,7 +301,9 @@ Solo constantes (no lógica). k, eta, epsilon, max_iter y escala de
 inicialización para MovieLens quedan pendientes hasta correr la demo a mano
 y elegirlos (decisión 4); no hay script de calibración aparte, el criterio
 usado queda como comentario en este archivo. `TOP_N_DEFECTO` ya tiene valor
-(decisión 7). `RMSE_DEFECTO` se elimina (decisión 2).
+(decisión 7). `RMSE_DEFECTO` se elimina (decisión 2). `USUARIO_DEFECTO`,
+`RUTA_DATOS_DEFECTO` y `RUTA_GRAFICO_DEFECTO` se agregaron con T14, para
+`--usuario`, `--datos` y `--grafico` de `demo.py`.
 
 ```python
 """Valores por defecto de los hiperparámetros (algunos pendientes hasta correr la demo a mano — ver decisión 4)."""
@@ -300,6 +318,9 @@ ESCALA_INICIALIZACION_DEFECTO: float = ...  # PENDIENTE (se completa corriendo l
 
 # --- Demo ---
 TOP_N_DEFECTO: int = 10       # decisión 7: lo que entra cómodo en pantalla durante la demo
+USUARIO_DEFECTO: int = 1      # id crudo de MovieLens (no índice); si --k lo filtra, UsuarioNoEncontradoError
+RUTA_DATOS_DEFECTO: Path = Path("data/ml-100k")   # misma carpeta que scripts/descargar_movielens.py
+RUTA_GRAFICO_DEFECTO: Path = Path("convergencia.png")
 ```
 
 ## 4. Contenido de `src/errores.py`
@@ -332,6 +353,25 @@ class ErrorDescargaDataset(ErrorFactorizacion):
     """
 
     def __init__(self, url: str, causa: Exception | None = None) -> None: ...
+
+
+class DivergenciaError(ErrorFactorizacion):
+    """El descenso de gradiente divergió: f dejó de ser finito (inf o NaN).
+
+    Atributos: iteracion (1-indexada) y eta usado. `demo.py` la captura y
+    muestra solo el mensaje, sin traceback.
+    """
+
+    def __init__(self, iteracion: int, eta: float) -> None: ...
+
+
+class UsuarioNoEncontradoError(ErrorFactorizacion):
+    """El id crudo de `--usuario` no está en el conjunto filtrado.
+
+    Atributo: usuario_id (el id crudo pedido).
+    """
+
+    def __init__(self, usuario_id: int) -> None: ...
 ```
 
 ## 5. Tests y criterios de aceptación cubiertos

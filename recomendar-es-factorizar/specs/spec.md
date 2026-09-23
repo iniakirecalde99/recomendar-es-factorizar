@@ -88,17 +88,22 @@ max_iter).
 - Tabla por consola: iteraciones, tiempo, f final.
 
 ## 10. Demo (`python -m src.demo`)
-Argumentos: `--metodo {als,gd,ambos}`, `--k`, `--eta`, `--epsilon`,
-`--max-iter`, `--semilla`, `--usuario`, `--top-n`.
+Argumentos: `--datos`, `--grafico`, `--k`, `--eta`, `--epsilon`,
+`--max-iter`, `--semilla`, `--usuario`, `--top-n`. Sin `--metodo`: la demo
+siempre corre ALS y GD, para poder compararlos (sección 9). `--usuario`
+recibe el id crudo de MovieLens (no el índice reindexado); si el usuario no
+está en el conjunto filtrado, falla con un error claro.
 Salidas:
 - Resumen del preprocesamiento (filtrados).
 - Progreso por iteración (logging INFO).
 - Comparación (sección 9).
-- Top-N recomendaciones para `--usuario`: películas no calificadas por él con
-  mayor r̂ᵢⱼ, con título.
-- Para cada factor latente, las 5 películas con mayor y menor valor en esa
-  columna de V (con títulos), sin etiquetarlas: la interpretación la hace el
-  grupo en el oral.
+- Top-N recomendaciones para `--usuario`, de ALS y de GD lado a lado:
+  películas no calificadas por él con mayor r̂ᵢⱼ, con título.
+- Para cada factor latente de V de ALS (no de GD, aclarado en la salida),
+  las 5 películas con mayor y menor valor en esa columna (con títulos), sin
+  etiquetarlas: la interpretación la hace el grupo en el oral.
+- Si el descenso de gradiente diverge, un mensaje de error claro (sin
+  traceback), no una excepción sin capturar.
 
 ## 11. Criterios de aceptación (tests)
 - CA-01 Datos: después de cargar `u.data` sin filtrar, R es 943 × 1682 y M
