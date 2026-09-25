@@ -338,7 +338,7 @@ ESCALA_INICIALIZACION_DEFECTO: float = 1.0  # U0, V0 uniformes en [0, 1), del or
 TOP_N_DEFECTO: int = 10       # decisión 7: lo que entra cómodo en pantalla durante la demo
 USUARIO_DEFECTO: int = 1      # id crudo de MovieLens (no índice); si --umbral lo filtra, UsuarioNoEncontradoError
 RUTA_DATOS_DEFECTO: Path = Path("data/ml-100k")   # misma carpeta que scripts/descargar_movielens.py
-RUTA_GRAFICO_DEFECTO: Path = Path("convergencia.png")
+RUTA_GRAFICO_DEFECTO: Path = Path("salidas/convergencia.png")  # salidas/ va en .gitignore (T15)
 ```
 
 ## 4. Contenido de `src/errores.py`

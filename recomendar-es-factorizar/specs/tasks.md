@@ -186,3 +186,29 @@ definir los argumentos de `python -m src.demo` con los defaults de
 `test_demo.py::test_construir_parser_expone_los_argumentos_esperados_y_defaults`,
 `test_demo.py::test_main_corre_extremo_a_extremo_sobre_dataset_chico_sin_lanzar_excepciones`
 (con fixtures chicas en `tests/`, no la MovieLens real).
+
+## 9. Recomendador HTML
+
+### [x] T15 — Recomendador estático para un usuario nuevo
+**Objetivo:** `src/front.py` genera `salidas/recomendador.html`, página
+estática sin servidor ni dependencias externas, con la V de ALS y los
+títulos incrustados como JSON. La página muestra las 30 películas con más
+calificaciones para calificar de 1 a 5; con al menos k calificaciones
+calcula el vector del usuario nuevo resolviendo las ecuaciones normales con
+V fija (el mismo paso de U de ALS, informe 5; comentado así en el JS) y
+muestra el top-10 de películas no calificadas. Si hay menos de k
+calificaciones, pide más en vez de calcular. Como el JS usa la fórmula
+cerrada del sistema 2×2, solo soporta k=2 (`DimensionLatenteNoSoportadaError`
+si no). Además: default de `--grafico` a `salidas/convergencia.png`,
+`salidas/` al `.gitignore` y se borra el `convergencia.png` suelto.
+Reemplaza la idea del plano latente.
+**Archivos:** `src/front.py` (`generar_html`, `peliculas_mas_calificadas`,
+`construir_parser`, `main`), `src/config.py` (`RUTA_GRAFICO_DEFECTO`,
+`RUTA_FRONT_DEFECTO`, `N_A_CALIFICAR_DEFECTO`), `src/errores.py`
+(`DimensionLatenteNoSoportadaError`), `src/demo.py` (crea la carpeta del
+gráfico), `.gitignore`, `specs/plan.md` (default del gráfico).
+**Cierra:** ninguno.
+**Test que se escribe primero:** `test_front.py::test_generar_html_crea_el_archivo_con_v_y_titulos_en_json`,
+`test_front.py::test_vector_de_usuario_con_resolver_factor_coincide_con_formula_2x2_del_js`,
+`test_front.py::test_peliculas_mas_calificadas_ordena_por_cantidad_de_calificaciones`,
+`test_front.py::test_generar_html_rechaza_k_distinto_de_2`.
