@@ -112,6 +112,26 @@ Salidas:
 - Si el descenso de gradiente diverge, un mensaje de error claro (sin
   traceback), no una excepción sin capturar.
 
+## 10.1 Recomendador HTML (`python -m src.front`)
+Genera `salidas/recomendador.html` (argumento `--salida`): una página
+estática, sin servidor ni dependencias externas, que se abre con doble clic
+en cualquier navegador. Para armarla entrena ALS sobre MovieLens con los
+defaults de `config.py` y deja incrustados como JSON la V resultante, los
+títulos, las películas para calificar y los parámetros de la página.
+Uso:
+- La página muestra las 30 películas con más calificaciones de MovieLens
+  filtrado (`--n-a-calificar`) para calificar de 1 a 5.
+- Con al menos 5 calificaciones (`--min-calificaciones`) calcula el vector u
+  del usuario nuevo resolviendo las ecuaciones normales con V fija: es el
+  mismo paso de U de ALS (informe 5), sin volver a entrenar. Con menos, pide
+  más en vez de calcular: con k calificaciones el sistema es resoluble pero
+  queda mal determinado (mismo criterio que el umbral del filtro, §4).
+- Muestra el top-10 (`--top-n`) de películas que el usuario no calificó,
+  ordenadas por mayor r̂ⱼ = Vⱼ·u, solo con el orden y los títulos, sin el
+  valor estimado.
+- Solo soporta k = 2: el JavaScript resuelve el sistema 2×2 con fórmula
+  cerrada (regla de Cramer). Con otro k, `DimensionLatenteNoSoportadaError`.
+
 ## 11. Criterios de aceptación (tests)
 - CA-01 Datos: después de cargar `u.data` sin filtrar, R es 943 × 1682 y M
   tiene 100.000 valores True.
@@ -146,6 +166,9 @@ Salidas:
   usuario.
 - CA-12 Sin librerías prohibidas: ningún archivo de `src/` importa Surprise,
   implicit ni scikit-learn, ni usa inv, lstsq o pinv.
+- CA-13 Recomendador HTML: el vector del usuario que calcula la página
+  (fórmula 2×2 del JavaScript) coincide con `resolver_factor` para un caso
+  fijo.
 
 ## 12. Decisiones pendientes
 - V₀ del ejemplo de ALS a mano (sección 5 del informe).

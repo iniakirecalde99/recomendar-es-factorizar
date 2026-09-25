@@ -212,3 +212,16 @@ gráfico), `.gitignore`, `specs/plan.md` (default del gráfico).
 `test_front.py::test_vector_de_usuario_con_resolver_factor_coincide_con_formula_2x2_del_js`,
 `test_front.py::test_peliculas_mas_calificadas_ordena_por_cantidad_de_calificaciones`,
 `test_front.py::test_generar_html_rechaza_k_distinto_de_2`.
+
+### [x] T16 — Ajustes al recomendador HTML y spec
+**Objetivo:** la página calcula recién con al menos
+`MIN_CALIFICACIONES_FRONT_DEFECTO` = 5 calificaciones (con k el sistema es
+resoluble pero queda mal determinado, mismo criterio que el umbral del
+filtro); el top-10 muestra solo el orden y los títulos, sin el valor
+estimado. Se agrega a `spec.md` la sección 10.1 del front y el CA-13.
+**Archivos:** `src/front.py`, `src/config.py`
+(`MIN_CALIFICACIONES_FRONT_DEFECTO`), `specs/spec.md` (§10.1, CA-13).
+**Cierra:** CA-13 (lo verifica el test de T15
+`test_vector_de_usuario_con_resolver_factor_coincide_con_formula_2x2_del_js`).
+**Test que se escribe primero:** `test_front.py::test_generar_html_incrusta_el_minimo_de_calificaciones_y_el_js_lo_usa`,
+`test_front.py::test_top_n_de_la_pagina_muestra_solo_titulos_sin_valor_estimado`.
