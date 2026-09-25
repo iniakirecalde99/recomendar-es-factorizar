@@ -225,3 +225,14 @@ estimado. Se agrega a `spec.md` la sección 10.1 del front y el CA-13.
 `test_vector_de_usuario_con_resolver_factor_coincide_con_formula_2x2_del_js`).
 **Test que se escribe primero:** `test_front.py::test_generar_html_incrusta_el_minimo_de_calificaciones_y_el_js_lo_usa`,
 `test_front.py::test_top_n_de_la_pagina_muestra_solo_titulos_sin_valor_estimado`.
+
+### [x] T17 — Validar el mínimo de calificaciones del front
+**Objetivo:** `generar_html` verifica que `min_calificaciones >= k` y, si
+no, lanza `MinimoCalificacionesInsuficienteError` con un mensaje claro
+antes de escribir el HTML (con menos de k calificaciones el sistema del
+usuario nuevo es siempre singular).
+**Archivos:** `src/front.py` (`generar_html`), `src/errores.py`
+(`MinimoCalificacionesInsuficienteError`).
+**Cierra:** ninguno.
+**Test que se escribe primero:** `test_front.py::test_generar_html_rechaza_min_calificaciones_menor_que_k_sin_escribir_el_archivo`,
+`test_front.py::test_generar_html_acepta_min_calificaciones_igual_a_k`.
