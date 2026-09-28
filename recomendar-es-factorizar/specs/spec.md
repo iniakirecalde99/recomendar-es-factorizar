@@ -120,7 +120,9 @@ defaults de `config.py` y deja incrustados como JSON la V resultante, los
 títulos, las películas para calificar y los parámetros de la página.
 Uso:
 - La página muestra las 30 películas con más calificaciones de MovieLens
-  filtrado (`--n-a-calificar`) para calificar de 1 a 5.
+  filtrado (`--n-a-calificar`) para calificar de 1 a 5. Una leyenda explica la
+  escala: 1 = no me gusta, 2 = no me convence, 3 = está bien, 4 = me gusta,
+  5 = me encanta.
 - Con al menos 5 calificaciones (`--min-calificaciones`) calcula el vector u
   del usuario nuevo resolviendo las ecuaciones normales con V fija: es el
   mismo paso de U de ALS (informe 5), sin volver a entrenar. Con menos, pide

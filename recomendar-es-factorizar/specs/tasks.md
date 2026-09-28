@@ -248,3 +248,12 @@ lista para calificar y en el top-10. Solo para mostrar: el modelo no los usa
 **Test que se escribe primero:** `test_datos.py::test_cargar_generos_lee_las_marcas_de_u_item_con_los_nombres_de_u_genre`,
 `test_front.py::test_generar_html_incrusta_los_generos_en_espanol`,
 `test_front.py::test_generar_html_sin_generos_deja_listas_vacias`.
+
+### [x] T19 — Explicar la escala de calificación en el recomendador HTML
+**Objetivo:** que la página aclare que se califica de 1 a 5 y qué significa
+cada valor (1 = no me gusta … 5 = me encanta), con una leyenda visible y el
+significado en cada botón.
+**Archivos:** `src/front.py` (`ETIQUETAS_CALIFICACION`, plantilla),
+`specs/spec.md` (§10.1).
+**Cierra:** ninguno.
+**Test que se escribe primero:** `test_front.py::test_generar_html_explica_la_escala_de_1_a_5`.
