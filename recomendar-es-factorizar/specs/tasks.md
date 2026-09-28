@@ -279,3 +279,13 @@ de 0,5 a 5), con la ruta por defecto `data/ml-latest-small/`.
 `test_cargar_generos_separa_la_columna_genres_de_movies_csv`,
 `test_preparar_datos_movielens_integra_carga_filtro_y_titulos`) y el
 dataset chico de `test_demo.py`, pasados a CSV.
+
+### [x] T21 — Script de descarga de MovieLens latest-small
+**Objetivo:** que `scripts/descargar_movielens.py` baje
+`ml-latest-small.zip` de GroupLens y lo descomprima en
+`data/ml-latest-small/`.
+**Archivos:** `scripts/descargar_movielens.py` (`URL_MOVIELENS`,
+`NOMBRE_CARPETA_DATASET`), `specs/plan.md`.
+**Cierra:** ninguno.
+**Test que se escribe primero:** `test_descargar_movielens.py::test_la_url_por_defecto_es_la_de_movielens_latest_small`
+(y los dos tests de T02, apuntados a la carpeta nueva).

@@ -304,8 +304,8 @@ class FilaComparacion:
 
 ### `scripts/descargar_movielens.py` (spec §3)
 
-- `descargar_movielens(directorio_destino: Path, url: str = URL_MOVIELENS_100K) -> Path`
-  Descarga el zip de MovieLens 100K a `directorio_destino` y lo descomprime;
+- `descargar_movielens(directorio_destino: Path, url: str = URL_MOVIELENS) -> Path`
+  Descarga el zip de MovieLens latest-small a `directorio_destino` y lo descomprime;
   si ya existe, lo informa y no descarga de nuevo. Si la descarga falla (sin
   red), lanza `ErrorDescargaDataset` con un mensaje que indica la URL para
   descargarlo a mano.
