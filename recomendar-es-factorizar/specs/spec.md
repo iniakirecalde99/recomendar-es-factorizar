@@ -131,6 +131,10 @@ Uso:
   valor estimado.
 - Solo soporta k = 2: el JavaScript resuelve el sistema 2×2 con fórmula
   cerrada (regla de Cramer). Con otro k, `DimensionLatenteNoSoportadaError`.
+- Debajo de cada título muestra sus géneros de MovieLens (`u.item` y
+  `u.genre`), en español, para poder juzgar si las recomendaciones tienen
+  sentido. Son solo informativos: el modelo no los usa y no etiquetan los
+  factores latentes.
 
 ## 11. Criterios de aceptación (tests)
 - CA-01 Datos: después de cargar `u.data` sin filtrar, R es 943 × 1682 y M

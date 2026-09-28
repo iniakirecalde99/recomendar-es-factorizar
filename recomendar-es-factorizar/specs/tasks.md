@@ -236,3 +236,15 @@ usuario nuevo es siempre singular).
 **Cierra:** ninguno.
 **Test que se escribe primero:** `test_front.py::test_generar_html_rechaza_min_calificaciones_menor_que_k_sin_escribir_el_archivo`,
 `test_front.py::test_generar_html_acepta_min_calificaciones_igual_a_k`.
+
+### [x] T18 — Géneros en el recomendador HTML
+**Objetivo:** cargar los géneros de cada película (marcas 0/1 de `u.item`,
+nombres de `u.genre`) y mostrarlos en español debajo de cada título, en la
+lista para calificar y en el top-10. Solo para mostrar: el modelo no los usa
+(regla 8 de CLAUDE.md).
+**Archivos:** `src/datos.py` (`cargar_generos`), `src/front.py`
+(`GENEROS_EN_ESPANOL`, `generar_html`, `main`), `specs/spec.md` (§10.1).
+**Cierra:** ninguno.
+**Test que se escribe primero:** `test_datos.py::test_cargar_generos_lee_las_marcas_de_u_item_con_los_nombres_de_u_genre`,
+`test_front.py::test_generar_html_incrusta_los_generos_en_espanol`,
+`test_front.py::test_generar_html_sin_generos_deja_listas_vacias`.
