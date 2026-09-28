@@ -289,3 +289,13 @@ dataset chico de `test_demo.py`, pasados a CSV.
 **Cierra:** ninguno.
 **Test que se escribe primero:** `test_descargar_movielens.py::test_la_url_por_defecto_es_la_de_movielens_latest_small`
 (y los dos tests de T02, apuntados a la carpeta nueva).
+
+### [x] T22 — Géneros de latest-small en el recomendador HTML
+**Objetivo:** traducir los géneros tal como los escribe `movies.csv`
+(`Children`, `IMAX`, `(no genres listed)` → "sin género"), sacando los de
+100K que ya no aparecen (`Children's`, `unknown`).
+**Archivos:** `src/front.py` (`GENEROS_EN_ESPANOL`).
+**Cierra:** ninguno.
+**Test que se escribe primero:** `test_front.py::test_generar_html_incrusta_los_generos_en_espanol`
+(con los nombres nuevos) y `test_front.py::test_todos_los_generos_de_movielens_tienen_traduccion`
+(marcado `movielens`: todo género del `movies.csv` real tiene traducción).
