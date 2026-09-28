@@ -2,13 +2,13 @@
 
 ## 1. Objetivo
 Implementar la factorización R ≈ U·Vᵀ de la matriz usuario–película de
-MovieLens 100K con dos métodos independientes, ALS y descenso de gradiente, y
+MovieLens (versión latest-small) con dos métodos independientes, ALS y descenso de gradiente, y
 mostrar en vivo: la convergencia de ambos, su comparación y recomendaciones
 concretas para un usuario. El código tiene que reproducir los ejemplos
 numéricos del informe.
 
 ## 2. Alcance
-Dentro: carga y preprocesamiento de MovieLens 100K; modelo y pérdida; ALS;
+Dentro: carga y preprocesamiento de MovieLens latest-small; modelo y pérdida; ALS;
 descenso de gradiente completo; comparación; recomendaciones; ejemplos chicos
 del informe como tests.
 Fuera: regularización, descenso estocástico o por mini-lotes, sesgos por
@@ -16,14 +16,17 @@ usuario o película, otros datasets, interfaz gráfica, optimización de
 rendimiento más allá de numpy vectorizado.
 
 ## 3. Datos
-- Fuente: MovieLens 100K de GroupLens (943 usuarios, 1682 películas, 100.000
-  calificaciones enteras de 1 a 5).
+- Fuente: MovieLens latest-small de GroupLens (610 usuarios, 9.724
+  películas calificadas, 100.836 calificaciones de 0,5 a 5 de a media
+  estrella; películas hasta 2018). Reemplaza a MovieLens 100K (hasta 1998)
+  para tener películas más nuevas.
 - Script `scripts/descargar_movielens.py`: descarga el zip oficial a `data/`,
   lo descomprime e informa si ya existe. Si no hay red, falla con un mensaje
   claro indicando dónde descargarlo a mano.
-- Archivos usados: `u.data` (usuario, película, calificación, timestamp,
-  separados por tab) para el dataset completo; `u.item` (codificación
-  latin-1, separado por `|`) para los títulos.
+- Archivos usados (CSV en UTF-8, con encabezado): `ratings.csv`
+  (`userId,movieId,rating,timestamp`) para las calificaciones y
+  `movies.csv` (`movieId,title,genres`; los títulos con coma van entre
+  comillas) para los títulos y géneros.
 - Los ids del archivo empiezan en 1; internamente se reindexan desde 0 y se
   guarda el mapeo para poder mostrar títulos.
 
@@ -133,14 +136,14 @@ Uso:
   valor estimado.
 - Solo soporta k = 2: el JavaScript resuelve el sistema 2×2 con fórmula
   cerrada (regla de Cramer). Con otro k, `DimensionLatenteNoSoportadaError`.
-- Debajo de cada título muestra sus géneros de MovieLens (`u.item` y
-  `u.genre`), en español, para poder juzgar si las recomendaciones tienen
+- Debajo de cada título muestra sus géneros de MovieLens (columna `genres`
+  de `movies.csv`), en español, para poder juzgar si las recomendaciones tienen
   sentido. Son solo informativos: el modelo no los usa y no etiquetan los
   factores latentes.
 
 ## 11. Criterios de aceptación (tests)
-- CA-01 Datos: después de cargar `u.data` sin filtrar, R es 943 × 1682 y M
-  tiene 100.000 valores True.
+- CA-01 Datos: después de cargar `ratings.csv` sin filtrar, R es 610 × 9724
+  y M tiene 100.836 valores True.
 - CA-02 Huecos: modificar cualquier valor fuera de Ω (incluido reemplazar NaN
   por un número) no cambia f.
 - CA-03 Filtro: después del preprocesamiento, toda fila y columna de M tiene

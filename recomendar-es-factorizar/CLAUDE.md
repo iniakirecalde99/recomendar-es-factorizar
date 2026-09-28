@@ -1,7 +1,7 @@
 # Recomendar es factorizar — demo de código
 
 Demo del trabajo de promoción de Matemática 4 (Facultad de Informática, UNLP).
-El código implementa la factorización R ≈ U·Vᵀ sobre MovieLens 100K con dos
+El código implementa la factorización R ≈ U·Vᵀ sobre MovieLens latest-small con dos
 métodos distintos: ALS (mínimos cuadrados alternados) y descenso de gradiente.
 El código es la contraparte ejecutable de un informe escrito: cada fórmula
 implementada tiene que coincidir con la del informe.

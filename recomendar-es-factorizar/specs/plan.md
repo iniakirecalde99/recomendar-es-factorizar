@@ -106,8 +106,8 @@ class ConjuntoCalificaciones:
 ```
 
 - `cargar_calificaciones(ruta_archivo: Path) -> ConjuntoCalificaciones`
-  Carga un archivo estilo `u.data` (usuario, película, calificación,
-  timestamp separados por tab), reindexa ids de usuario y película desde 0 y
+  Carga `ratings.csv` de MovieLens latest-small (CSV con encabezado
+  `userId,movieId,rating,timestamp`), reindexa ids de usuario y película desde 0 y
   arma R (NaN en huecos) y M. No aplica ningún filtro.
   **Cubre:** CA-01.
 
@@ -122,9 +122,13 @@ class ConjuntoCalificaciones:
   columna.
   **Cubre:** CA-03.
 
-- `cargar_titulos(ruta_u_item: Path) -> dict[int, str]`
-  Carga `u.item` (codificación latin-1, separado por `|`) y devuelve el
-  mapeo id de película crudo → título.
+- `cargar_titulos(ruta_movies: Path) -> dict[int, str]`
+  Carga `movies.csv` (UTF-8, con el módulo `csv` porque los títulos con coma
+  van entre comillas) y devuelve el mapeo id de película crudo → título.
+
+- `cargar_generos(ruta_movies: Path) -> dict[int, list[str]]`
+  Separa la columna `genres` de `movies.csv` por `|` (T18, T20). Solo para
+  mostrar en el recomendador HTML.
 
 - `construir_indice_a_titulo(id_pelicula_a_indice: dict[int, int], titulos_por_id: dict[int, str]) -> dict[int, str]`
   Invierte `id_pelicula_a_indice` y lo combina con `titulos_por_id` para
@@ -337,7 +341,7 @@ ESCALA_INICIALIZACION_DEFECTO: float = 1.0  # U0, V0 uniformes en [0, 1), del or
 # --- Demo ---
 TOP_N_DEFECTO: int = 10       # decisión 7: lo que entra cómodo en pantalla durante la demo
 USUARIO_DEFECTO: int = 1      # id crudo de MovieLens (no índice); si --umbral lo filtra, UsuarioNoEncontradoError
-RUTA_DATOS_DEFECTO: Path = Path("data/ml-100k")   # misma carpeta que scripts/descargar_movielens.py
+RUTA_DATOS_DEFECTO: Path = Path("data/ml-latest-small")   # misma carpeta que scripts/descargar_movielens.py
 RUTA_GRAFICO_DEFECTO: Path = Path("salidas/convergencia.png")  # salidas/ va en .gitignore (T15)
 ```
 

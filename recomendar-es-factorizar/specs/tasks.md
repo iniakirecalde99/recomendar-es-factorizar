@@ -257,3 +257,25 @@ significado en cada botón.
 `specs/spec.md` (§10.1).
 **Cierra:** ninguno.
 **Test que se escribe primero:** `test_front.py::test_generar_html_explica_la_escala_de_1_a_5`.
+
+## 10. Cambio de dataset: MovieLens latest-small
+
+### [x] T20 — Carga de MovieLens latest-small
+**Objetivo:** reemplazar MovieLens 100K por latest-small (películas hasta
+2018): leer `ratings.csv` y `movies.csv` (CSV en UTF-8 con encabezado, con
+el módulo `csv` porque hay títulos con coma entre comillas; calificaciones
+de 0,5 a 5), con la ruta por defecto `data/ml-latest-small/`.
+**Archivos:** `src/datos.py` (`cargar_calificaciones`, `cargar_titulos`,
+`cargar_generos`, `preparar_datos_movielens`), `src/demo.py` y
+`src/front.py` (nombres de archivo), `src/config.py`
+(`RUTA_DATOS_DEFECTO`), `tests/conftest.py` y `pytest.ini` (marker
+`movielens`), `specs/spec.md` (§1-3, §10.1, CA-01), `specs/plan.md`,
+`CLAUDE.md`.
+**Cierra:** CA-01 (nuevo: 610 × 9724, 100.836 calificaciones).
+**Test que se escribe primero:** los de `test_datos.py`
+(`test_cargar_calificaciones_reindexa_ids_y_arma_mascara`,
+`test_cargar_calificaciones_dimensiones_y_mascara`,
+`test_cargar_titulos_y_construir_indice_a_titulo`,
+`test_cargar_generos_separa_la_columna_genres_de_movies_csv`,
+`test_preparar_datos_movielens_integra_carga_filtro_y_titulos`) y el
+dataset chico de `test_demo.py`, pasados a CSV.
