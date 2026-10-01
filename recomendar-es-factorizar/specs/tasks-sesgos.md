@@ -133,7 +133,7 @@ menor SCE de prueba, sin regla de empate. Línea de base de precisión:
   (espía: k = 2, λ = 0, máscara de entrenamiento, semilla de inicialización).
 - `test_experimento_sesgos.py::test_parser_toma_los_defaults_de_config`.
 
-### [ ] TS07 — Reentrenamiento, concentración y criterio (spec S §5, §7 y §8)
+### [x] TS07 — Reentrenamiento, concentración y criterio (spec S §5, §7 y §8)
 **Objetivo:** con el par elegido, reentrenar sobre todo Ω con μ de todo Ω, y
 medir sobre ese modelo el fuera de rango (r̂ completo) y la concentración de
 los 321 usuarios reales con A y con B (reusa `medir_tops` de
