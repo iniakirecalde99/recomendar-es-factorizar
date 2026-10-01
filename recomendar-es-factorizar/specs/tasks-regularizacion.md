@@ -233,7 +233,7 @@ que TR10 sea una sola corrida.
   (test de humo de `main()` sobre un dataset sintético; escrito después de
   la integración, sin rojo previo).
 
-### [ ] TR10 — Corrida completa y registro
+### [x] TR10 — Corrida completa y registro
 **Objetivo:** correr `python -m experimentos.regularizacion` sobre MovieLens
 con los criterios ya congelados; con el par elegido, el reentrenamiento, la
 verificación con GD (con sus intentos de η) y la concentración de TR09;
