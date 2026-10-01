@@ -160,7 +160,7 @@ de Ω" son solo los pares no observados: ni Ω_ent ni Ω_prueba (spec R §8).
   menos" y "a lo sumo" incluidos).
 - `test_experimento_regularizacion.py::test_config_tiene_la_escala_y_los_umbrales_de_la_seccion_9`.
 
-### [ ] TR07 — Barrido de (k, λ) y selección
+### [x] TR07 — Barrido de (k, λ) y selección
 **Objetivo:** para cada par de la grilla (`GRILLA_K` = {2, 3, 5, 10},
 `GRILLA_LAMBDA` = {0, 1, 5, 10, 20} en `config.py`), ALS sobre Ω_ent con U₀,
 V₀ generados con `SEMILLA_INICIALIZACION` (nueva en `config.py`, separada de
@@ -184,6 +184,8 @@ argumentos (defaults de config).
   `..._con_empate_menor_al_1_por_ciento_gana_el_menor_k` y
   `..._con_varios_pares_del_menor_k_gana_el_de_menor_sce` (filas sintéticas).
 - `test_experimento_regularizacion.py::test_todos_los_lambda_de_un_k_arrancan_del_mismo_u0_v0`.
+- `test_experimento_regularizacion.py::test_seleccion_ignora_los_pares_con_error`.
+- `test_experimento_regularizacion.py::test_config_de_la_grilla_y_las_semillas`.
 - `test_experimento_regularizacion.py::test_parser_toma_los_defaults_de_config` (CA-R07).
 
 ### [ ] TR08 — Reentrenamiento sobre todo Ω y verificación con GD
