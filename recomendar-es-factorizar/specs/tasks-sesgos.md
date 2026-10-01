@@ -94,7 +94,7 @@ sesgos (el CA-S01 original se eliminó).
 
 ## 2. Experimento (experimentos/sesgos.py, fuera de src/)
 
-### [ ] TS05 — Precisión@10 y constantes (spec S §5, §7 y §8)
+### [x] TS05 — Precisión@10 y constantes (spec S §5, §7 y §8)
 **Objetivo:** `precision_en_n(puntajes, M_ent, R, M_prueba, top_n,
 umbral_relevante)`: para cada usuario con al menos una calificación ≥
 `umbral_relevante` en Ω_prueba, top-N entre las películas que no tiene en

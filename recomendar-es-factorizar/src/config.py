@@ -130,3 +130,24 @@ SEMILLA_INICIALIZACION: int = SEMILLA_DEFECTO
 MAX_REDUCCIONES_ETA: int = 3
 # Si GD diverge con el par elegido, η se divide por 2 hasta 3 veces
 # (specs/regularizacion.md §5); cada intento se registra.
+
+# --- Experimento de sesgos (rama experimento/sesgos, specs/sesgos.md) ---
+# Fijados antes de correr el experimento: se pueden cambiar hasta que
+# arranque TS08, no después.
+
+UMBRAL_RELEVANTE: float = 4.0
+# Precisión@10 (spec S §7): una película de prueba es relevante si su
+# calificación es >= 4.
+
+GRILLA_K_SESGOS: tuple[int, ...] = (2, 5, 10, 20)
+GRILLA_LAMBDA_SESGOS: tuple[float, ...] = (1.0, 5.0, 10.0, 20.0)
+# Grilla del barrido con sesgos (spec S §5); las GRILLA_K y GRILLA_LAMBDA de
+# la regularización no se tocan.
+
+MAX_FRECUENCIA_SESGOS: float = 0.25
+# Criterio 1 (spec S §8): la más frecuente, en a lo sumo el 25 % de los top-10.
+MIN_PELICULAS_DISTINTAS_SESGOS: int = 127
+# Criterio 2 (spec S §8): al menos 127 películas en algún top-10. Sale del
+# experimento 3 (usuarios reales con el modelo de main): no empeorar main.
+MAX_FRACCION_FUERA_DE_RANGO_SESGOS: float = 0.01
+# Criterio 4 (spec S §8): a lo sumo 1 % de estimaciones fuera de rango.
