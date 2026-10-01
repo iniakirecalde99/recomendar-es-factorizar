@@ -26,13 +26,16 @@ implementada tiene que coincidir con la del informe.
 
 ## Reglas matemáticas (no negociables)
 1. main no usa regularización. En la rama experimento/regularizacion se permite el término λ definido en specs/regularizacion.md, y nada más.
+   - En la rama experimento/sesgos se permiten además los sesgos por usuario y por
+     película, k > 2 y la métrica precisión@10, según specs/sesgos.md.
 2. Los huecos de R se representan con `np.nan`. El error se calcula SOLO sobre Ω
    usando la máscara M (booleana, M[i,j] = True si (i,j) ∈ Ω). Nunca rellenar
    huecos con ceros ni con promedios.
 3. ALS y descenso de gradiente viven en módulos separados y no comparten lógica
    de actualización. Solo comparten: carga de datos, inicialización de U y V, predicción
    U @ V.T y función a minimizar f (la SCE en main; la SCE más el término λ
-   en esta rama, specs/regularizacion.md §3).
+   en experimento/regularizacion, specs/regularizacion.md §3; la f con sesgos
+   de specs/sesgos.md §2 en experimento/sesgos).
 4. ALS: el paso de V es la MISMA función que el paso de U, llamada con R.T y
    M.T (relación inversa, informe 3.1 y 5.2). No escribir una segunda función
    para V.
