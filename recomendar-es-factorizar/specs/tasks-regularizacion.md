@@ -210,19 +210,28 @@ divergiendo, queda como falla de GD sin cambiar el veredicto (spec R §5,
   sin excepción hacia afuera).
 - `test_experimento_regularizacion.py::test_parser_toma_eta_y_max_reducciones_de_config`.
 
-### [ ] TR09 — Concentración con λ
-**Objetivo:** que `experimentos/concentracion.py` reciba k y λ, entrene ALS
-sobre todo Ω con ese λ (como el modelo reentrenado de TR08) y resuelva el
-usuario simulado con `resolver_factor(..., λ)` y notas con distribución real
-(spec R §8). Con λ = 0 y k = 2 tiene que seguir dando lo registrado en la
-bitácora (65 películas; 44,5 % con notas reales).
-**Archivos:** `experimentos/concentracion.py`.
+### [x] TR09 — Concentración con λ
+**Objetivo:** que `experimentos/concentracion.py` reciba λ (`simular(...,
+lambda_)`, CLI `--lambda`, default 0) y lo use en el entrenamiento de ALS y
+en `resolver_factor` para el usuario simulado (spec R §8). La concentración
+se mide con el modelo entrenado con ALS sobre todo Ω, con el par elegido y
+`SEMILLA_INICIALIZACION`, igual que la línea de base de main; nunca con el
+modelo entrenado sobre la partición. Con λ = 0 y k = 2 sigue dando lo
+registrado en la bitácora (65 películas; 44,5 % con notas reales). Además,
+`main()` de `experimentos/regularizacion.py` llama a `simular` con el par
+elegido (notas reales, sin centrado) y evalúa el veredicto de la §9, para
+que TR10 sea una sola corrida.
+**Archivos:** `experimentos/concentracion.py`, `experimentos/regularizacion.py`.
 **Cierra:** ninguno (soporte de CA-R08).
 **Test que se escribe primero:**
 - `test_experimento_concentracion.py::test_simular_con_lambda_cero_reproduce_la_bitacora`
   (marcado `movielens`).
-- `test_experimento_concentracion.py::test_simular_pasa_lambda_a_resolver_factor`
-  (matriz chica: con λ > 0 el u simulado cumple las ecuaciones regularizadas).
+- `test_experimento_concentracion.py::test_simular_pasa_lambda_al_entrenamiento_y_a_resolver_factor`
+  (espías: el λ llega al entrenamiento y al u de cada usuario simulado).
+- `test_experimento_concentracion.py::test_parser_de_concentracion_tiene_lambda_con_default_cero`.
+- `test_experimento_regularizacion.py::test_main_corre_de_punta_a_punta_sobre_dataset_chico`
+  (test de humo de `main()` sobre un dataset sintético; escrito después de
+  la integración, sin rojo previo).
 
 ### [ ] TR10 — Corrida completa y registro
 **Objetivo:** correr `python -m experimentos.regularizacion` sobre MovieLens
