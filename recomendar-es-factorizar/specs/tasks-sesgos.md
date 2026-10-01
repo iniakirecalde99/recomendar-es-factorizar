@@ -77,7 +77,7 @@ de usuarios calcula el vector (u, b) de un usuario simulado (spec S §7).
 - `test_sesgos.py::test_los_dos_pasos_usan_resolver_factor` (espía: se llama
   una vez por paso, con la matriz aumentada).
 
-### [ ] TS04 — Entrenamiento ALS con sesgos
+### [x] TS04 — Entrenamiento ALS con sesgos
 **Objetivo:** `entrenar_als_sesgos(R, M, U0, V0, mu, epsilon, max_iter,
 lambda_)` en `src/sesgos.py`: b y c arrancan en 0; alterna `paso_usuarios` y
 `paso_peliculas`; corta con |f(t+1) − f(t)| < ε usando `f_sesgos`; devuelve
