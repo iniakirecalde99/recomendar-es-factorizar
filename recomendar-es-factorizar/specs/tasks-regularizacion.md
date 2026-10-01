@@ -108,20 +108,25 @@ que usan hoy). `historial_f` guarda los valores de `f_regularizada`.
 - `test_als.py::test_entrenar_als_con_lambda_cero_es_identico_al_actual`
   (U, V e historial idénticos a la llamada sin λ).
 
-### [ ] TR05 — Partición entrenamiento/prueba
-**Objetivo:** después del filtro por umbral, mandar al azar una fracción de Ω
-a prueba con un `np.random.Generator` de semilla fija, pasar a
-entrenamiento todo par de prueba cuyo usuario o película quede sin
-calificaciones de entrenamiento, y loguear el tamaño de cada conjunto
-(spec R §6). Devuelve dos máscaras, M_ent y M_prueba; R no se toca.
-`FRACCION_PRUEBA` (0,2) y `SEMILLA_PARTICION` van a `config.py`.
+### [x] TR05 — Partición entrenamiento/prueba
+**Objetivo:** `particionar(M, fraccion_prueba, generador)`: después del
+filtro por umbral, sortear sin reposición round(fraccion · |Ω|) pares para
+prueba con un `np.random.Generator` de semilla fija, pasar a entrenamiento
+todo par de prueba cuyo usuario o película quede sin calificaciones de
+entrenamiento, y loguear el tamaño real de cada conjunto (spec R §6).
+Devuelve dos máscaras, M_ent y M_prueba; R no se toca. `FRACCION_PRUEBA`
+(0,2) y `SEMILLA_PARTICION = SEMILLA_DEFECTO` (por referencia) van a
+`config.py`. El tamaño real (después de pasar pares a entrenamiento) se
+registra en la bitácora en TR10.
 **Archivos:** `src/datos.py`, `src/config.py`.
 **Cierra:** CA-R05, CA-R07 (parte de la partición).
 **Test que se escribe primero:**
 - `test_datos.py::test_particion_es_disjunta_y_su_union_es_omega`.
 - `test_datos.py::test_particion_es_reproducible_con_la_semilla`.
+- `test_datos.py::test_particion_todo_usuario_y_pelicula_de_prueba_tiene_calificaciones_de_entrenamiento`
+  (máscara rala, fracción 0,5).
 - `test_datos.py::test_particion_pasa_a_entrenamiento_los_pares_que_dejarian_huerfano_a_un_usuario_o_pelicula`
-  (matriz chica armada para que el sorteo deje huérfana a una película).
+  (con fracción 1 todos los pares quedan huérfanos y vuelven a entrenamiento).
 
 ## 2. Experimento (experimentos/, fuera de src/)
 
@@ -215,7 +220,8 @@ bitácora (65 películas; 44,5 % con notas reales).
 con los criterios ya congelados; con el par elegido, el reentrenamiento, la
 verificación con GD (con sus intentos de η) y la concentración de TR09;
 registrar en `specs/bitacora.md` la tabla completa del barrido (k, λ,
-iteraciones, SCE de prueba, fuera de rango), el tamaño de la partición, el
+iteraciones, SCE de prueba, fuera de rango), el tamaño real de
+entrenamiento y prueba (después de pasar pares a entrenamiento), el
 par elegido con la aclaración de que su SCE de prueba es optimista, la
 comparación con GD (y cada intento de η, o la falla), la concentración y el
 veredicto contra la spec R §9 (criterio 2 sobre la partición; 3 y 4 sobre
