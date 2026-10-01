@@ -114,7 +114,7 @@ y `MAX_FRACCION_FUERA_DE_RANGO_SESGOS` = 0,01. Congeladas desde acá.
   (4,0 cuenta; 3,5 no).
 - `test_experimento_sesgos.py::test_config_tiene_grilla_y_umbrales_de_la_spec_s`.
 
-### [ ] TS06 — Barrido, selección y línea de base (spec S §5 y §7)
+### [x] TS06 — Barrido, selección y línea de base (spec S §5 y §7)
 **Objetivo:** para cada par (k, λ) de `GRILLA_K_SESGOS` × `GRILLA_LAMBDA_SESGOS`:
 `entrenar_als_sesgos` sobre Ω_ent desde `SEMILLA_INICIALIZACION`, con μ de
 Ω_ent; registrar iteraciones, SCE sobre Ω_prueba (r̂ completo), fuera de
