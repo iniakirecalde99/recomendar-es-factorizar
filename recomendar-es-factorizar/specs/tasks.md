@@ -299,3 +299,18 @@ dataset chico de `test_demo.py`, pasados a CSV.
 **Test que se escribe primero:** `test_front.py::test_generar_html_incrusta_los_generos_en_espanol`
 (con los nombres nuevos) y `test_front.py::test_todos_los_generos_de_movielens_tienen_traduccion`
 (marcado `movielens`: todo género del `movies.csv` real tiene traducción).
+
+### [x] T23 — Recalibración de defaults sobre MovieLens latest-small
+**Objetivo:** repetir el experimento de calibración (mismo criterio: menor
+umbral y después menor k con max|r̂| fuera de Ω < 7 para ALS y GD a la vez;
+eta que converja sin que f aumente) sobre el dataset nuevo, y dejar los
+valores definitivos en `config.py`: `UMBRAL_DEFECTO=40`, `K_DEFECTO=2`,
+`ETA_DEFECTO=5e-4`.
+**Archivos:** `src/config.py`, `specs/bitacora.md` (tablas y conclusión),
+`specs/plan.md` (bloque de `config.py`).
+**Cierra:** ninguno.
+**Test que se escribe primero:** `test_calibracion.py::test_defaults_de_config_cumplen_el_criterio_de_calibracion_sobre_movielens`
+(marcado `movielens`). No arranca en rojo: los defaults viejos (umbral=50)
+también cumplen el criterio. Lo que elige el menor umbral es el experimento
+de la bitácora; el test protege el criterio ante cambios futuros de los
+defaults.

@@ -330,11 +330,11 @@ specs/bitacora.md. `TOP_N_DEFECTO` ya tenía valor (decisión 7).
 """Valores por defecto de los hiperparámetros (definitivos, calibrados sobre MovieLens real — ver specs/bitacora.md)."""
 
 # --- Preprocesamiento y modelo ---
-UMBRAL_DEFECTO: int = 50      # primer umbral (20/50/100 probados) con max|r_hat| fuera de Ω < 7 para ALS y GD a la vez, con k=2; independiente de k (decisión 5, corregida), pero umbral >= k
-K_DEFECTO: int = 2            # el que menos amplifica |r_hat| fuera de Ω de los k probados (2, 3, 5) con umbral=50; evita el SistemaSingularError de umbral == k == 5
-ETA_DEFECTO: float = 2e-4     # de los eta probados (2e-4, 5e-4, 1e-3) con k=2, el único que converge por tolerancia sin que f aumente ni diverja
+UMBRAL_DEFECTO: int = 40      # recalibrado sobre MovieLens latest-small (T23): menor umbral (10/20/30/35/40/50) con max|r_hat| fuera de Ω < 7 para ALS y GD a la vez, con k=2; independiente de k (decisión 5, corregida), pero umbral >= k
+K_DEFECTO: int = 2            # único k (2, 3, 5) que cumple el criterio en latest-small; el recomendador HTML solo soporta k=2
+ETA_DEFECTO: float = 5e-4     # de los eta probados (2e-4, 5e-4, 1e-3) con umbral=40, k=2: converge sin que f aumente en la mitad de iteraciones que 2e-4; 1e-3 diverge
 EPSILON_DEFECTO: float = 1.0  # a la escala de la SCE sobre MovieLens filtrado (decenas de miles), corta en unas pocas decenas/cientos de iteraciones en vez de agotar max_iter
-MAX_ITER_DEFECTO: int = 3000  # GD con eta=2e-4 necesitó hasta ~1800 iteraciones en la calibración; deja margen sin alargar demasiado la demo
+MAX_ITER_DEFECTO: int = 3000  # GD con eta=5e-4 necesitó entre 430 y 755 iteraciones en la recalibración; deja margen sin alargar demasiado la demo
 SEMILLA_DEFECTO: int = 42     # arbitraria, solo para reproducibilidad (CA-10)
 ESCALA_INICIALIZACION_DEFECTO: float = 1.0  # U0, V0 uniformes en [0, 1), del orden de las calificaciones más chicas (1 a 5)
 
