@@ -188,7 +188,7 @@ argumentos (defaults de config).
 - `test_experimento_regularizacion.py::test_config_de_la_grilla_y_las_semillas`.
 - `test_experimento_regularizacion.py::test_parser_toma_los_defaults_de_config` (CA-R07).
 
-### [ ] TR08 — Reentrenamiento sobre todo Ω y verificación con GD
+### [x] TR08 — Reentrenamiento sobre todo Ω y verificación con GD
 **Objetivo:** con el par elegido, (a) reentrenar con ALS sobre todo Ω, sin
 partición, para evaluar los criterios 3 y 4 (spec R §7, último punto); y
 (b) correr descenso de gradiente sobre la partición y registrar su SCE de
@@ -208,6 +208,7 @@ divergiendo, queda como falla de GD sin cambiar el veredicto (spec R §5,
 - `test_experimento_regularizacion.py::test_verificar_gd_se_rinde_tras_max_reducciones_y_registra_la_falla`
   (siempre diverge: `MAX_REDUCCIONES_ETA` + 1 intentos y resultado "falla de GD",
   sin excepción hacia afuera).
+- `test_experimento_regularizacion.py::test_parser_toma_eta_y_max_reducciones_de_config`.
 
 ### [ ] TR09 — Concentración con λ
 **Objetivo:** que `experimentos/concentracion.py` reciba k y λ, entrene ALS
