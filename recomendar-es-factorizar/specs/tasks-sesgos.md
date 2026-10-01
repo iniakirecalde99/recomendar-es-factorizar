@@ -165,6 +165,39 @@ como está, sin cambiar grilla, semillas, umbrales ni ordenamientos.
 **Test que se escribe primero:** ninguno nuevo; `pytest -q` en verde antes de
 correr.
 
+### [x] TS09 — Recomendador HTML con sesgos
+**Objetivo:** probar el modelo con sesgos desde el navegador, sin tocar
+`recomendador.html` ni `src/` salvo lo indispensable para exportar.
+1. Exportar el modelo del par elegido en TS08 (k = 20, λ = 10), entrenado
+   con ALS sobre todo Ω: μ, V, c, k, λ y los títulos, como JSON incrustado
+   en la página (el mismo mecanismo que `recomendador.html` usa para V).
+   Ningún parámetro del modelo escrito en el HTML: todo sale del JSON.
+2. `salidas/recomendador-sesgos.html`, con las mismas 30 películas para
+   calificar que el actual. El vector del usuario sale del paso aumentado de
+   la spec S §3: incógnitas (u, b), matriz [V | 1] de las calificadas,
+   objetivo r − μ − c, sistema (k+1) × (k+1) con λ en la diagonal, resuelto
+   con eliminación gaussiana con pivoteo parcial.
+3. Selector de ordenamiento A (r̂ completo) o B (U·Vᵀ) para el top-10, sin
+   las películas calificadas; r̂ completo al lado de cada película en los
+   dos modos.
+4. Paridad: para 3 usuarios fijos, el (u, b) y los top-10 A y B del JS
+   coinciden con los de Python (`np.allclose` en (u, b), mismo orden).
+**Archivos:** `experimentos/front_sesgos.py` (generador y CLI
+`python -m experimentos.front_sesgos`), `src/config.py` (par elegido y ruta
+de salida), `tests/test_front_sesgos.py`.
+**Cierra:** ninguno (herramienta de prueba; fuera del criterio de la §8).
+**Test que se escribe primero:**
+- `test_front_sesgos.py::test_generar_html_exporta_mu_v_c_k_lambda_y_titulos`.
+- `test_front_sesgos.py::test_solver_del_js_resuelve_con_pivoteo_parcial`
+  (sistema con pivote nulo en la diagonal; se ejecuta el JS con node).
+- `test_front_sesgos.py::test_paridad_js_python_para_tres_usuarios` (u, b y
+  top-10 A y B; se ejecuta el JS con node).
+- `test_front_sesgos.py::test_el_js_toma_lambda_del_json` (cambiar λ en el
+  JSON cambia el (u, b) del JS como en Python).
+- `test_front_sesgos.py::test_config_tiene_el_par_elegido_en_ts08`.
+Los tests que ejecutan el JS se saltean con motivo si `node` no está
+instalado.
+
 ## Preguntas resueltas (decisión y dónde quedó)
 
 1. **CA-S01 y μ.** El CA-S01 original se elimina, sin camino de código para

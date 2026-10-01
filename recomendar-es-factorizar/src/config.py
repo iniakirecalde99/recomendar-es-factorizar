@@ -151,3 +151,11 @@ MIN_PELICULAS_DISTINTAS_SESGOS: int = 127
 # experimento 3 (usuarios reales con el modelo de main): no empeorar main.
 MAX_FRACCION_FUERA_DE_RANGO_SESGOS: float = 0.01
 # Criterio 4 (spec S §8): a lo sumo 1 % de estimaciones fuera de rango.
+
+K_FRONT_SESGOS: int = 20
+LAMBDA_FRONT_SESGOS: float = 10.0
+# Par elegido en TS08 (menor SCE de prueba del barrido con sesgos, ver
+# specs/bitacora.md): lo usa el recomendador HTML con sesgos (TS09).
+
+RUTA_FRONT_SESGOS_DEFECTO: Path = Path("salidas/recomendador-sesgos.html")
+# Página que genera `python -m experimentos.front_sesgos`, al lado de la de main.
