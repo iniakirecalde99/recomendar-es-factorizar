@@ -130,16 +130,20 @@ registra en la bitácora en TR10.
 
 ## 2. Experimento (experimentos/, fuera de src/)
 
-### [ ] TR06 — Métricas y criterios de éxito
+### [x] TR06 — Métricas y criterios de éxito
 **Objetivo:** en `experimentos/regularizacion.py`, funciones puras para:
-SCE sobre Ω_prueba (reusando `sce` con M_prueba), porcentaje de estimaciones
-fuera de [ESCALA_MIN − 1, ESCALA_MAX + 1] y máximo de |r̂| sobre los pares
-fuera de Ω (spec R §8), y `evaluar_criterios` contra la spec R §9. Recibe
+SCE sobre Ω_prueba (se usa `sce` con M_prueba, sin función nueva),
+`medir_fuera_de_rango` (fracción de estimaciones fuera de
+[ESCALA_MIN − 1, ESCALA_MAX + 1] y máximo de |r̂| sobre los pares fuera de
+Ω, spec R §8) y `evaluar_criterios` (devuelve un `Veredicto` con cada
+criterio) contra la spec R §9. Recibe
 por separado lo que sale de la partición (criterio 2: SCE de prueba del par
 elegido y de (k = 2, λ = 0)) y lo que sale del modelo reentrenado sobre
 todo Ω (criterios 3 y 4), según spec R §7. Constantes nuevas en
 `config.py`: `ESCALA_MIN` = 0,5 y `ESCALA_MAX` = 5 (rango permitido
-[−0,5; 6]) y los umbrales de §9 (congelados desde acá, ver arriba). "Fuera
+[−0,5; 6]) y los umbrales de §9 (congelados desde acá, ver arriba):
+`MIN_PELICULAS_EXITO` = 130, `MAX_FRECUENCIA_EXITO` = 0,25,
+`MAX_FRACCION_FUERA_DE_RANGO` = 0,01 y `TOLERANCIA_EMPATE` = 0,01. "Fuera
 de Ω" son solo los pares no observados: ni Ω_ent ni Ω_prueba (spec R §8).
 **Archivos:** `experimentos/regularizacion.py`, `src/config.py`.
 **Cierra:** CA-R07 (parte de rango y umbrales).
@@ -152,7 +156,9 @@ de Ω" son solo los pares no observados: ni Ω_ent ni Ω_prueba (spec R §8).
   `..._falla_si_la_sce_de_prueba_no_mejora_a_k2_lambda0`,
   `..._falla_con_mas_de_1_por_ciento_fuera_de_rango`,
   `..._falla_con_menos_de_130_peliculas_o_mas_de_25_por_ciento`,
-  `..._exitoso_si_cumple_todo` (resultados sintéticos).
+  `..._exitoso_si_cumple_todo` (resultados sintéticos, con los bordes "al
+  menos" y "a lo sumo" incluidos).
+- `test_experimento_regularizacion.py::test_config_tiene_la_escala_y_los_umbrales_de_la_seccion_9`.
 
 ### [ ] TR07 — Barrido de (k, λ) y selección
 **Objetivo:** para cada par de la grilla (`GRILLA_K` = {2, 3, 5, 10},
