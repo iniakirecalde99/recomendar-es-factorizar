@@ -21,6 +21,11 @@ f(U, V) = Σ_{(i,j) ∈ Ω_ent} (r_ij − U_i·V_j)² + λ (Σ_i ‖U_i‖² + �
 Ω_ent: pares observados de entrenamiento. ‖U_i‖²: suma de los cuadrados de
 la fila i de U (ídem V_j). λ ≥ 0. Con λ = 0, f es la SCE de main.
 
+f se implementa en src/modelo.py como una función aparte, f_regularizada;
+sce queda como la SCE pura (sin término λ) y es la que se usa para medir
+sobre Ω_prueba. f_regularizada es la que usan los criterios de corte de
+ALS y de descenso de gradiente. Con λ = 0, f_regularizada == sce.
+
 ## 4. ALS
 Paso de U, para cada usuario i, se resuelve el sistema de k × k:
     (V_iᵀ V_i + λ I) U_iᵀ = V_iᵀ r_i
@@ -40,7 +45,7 @@ entrada a entrada (los huecos no aportan error):
     ∇_V f = −2 Eᵀ U + 2 λ V
 - Los dos gradientes se calculan antes de actualizar (actualización
   simultánea, como en main).
-- Corte: |f(t+1) − f(t)| < ε, con la f de la sección 3.
+- Corte: |f(t+1) − f(t)| < ε, con f = f_regularizada (sección 3).
 - η, ε y MAX_ITER salen de config.py. Si f deja de ser finita, se lanza
   DivergenciaError como en main.
 - Si con el par elegido f deja de ser finita, η se divide por 2 y se vuelve
@@ -60,11 +65,15 @@ entrada a entrada (los huecos no aportan error):
 
 ## 7. Barrido y selección
 - Grilla en config.py: k ∈ {2, 3, 5, 10}, λ ∈ {0, 1, 5, 10, 20}.
-- Para cada par (k, λ): ALS sobre Ω_ent desde la misma inicialización. Se
-  registran iteraciones, f final, SCE sobre Ω_prueba y estimaciones fuera
-  de rango.
-- Se elige el par con menor SCE sobre Ω_prueba. Si dos pares difieren en
-  menos de 1 %, gana el de menor k.
+- Para cada par (k, λ): ALS sobre Ω_ent desde la misma inicialización: U₀
+  y V₀ se generan con SEMILLA_INICIALIZACION (en config.py, separada de
+  SEMILLA_PARTICION), la misma para todos los pares; así todos los λ de un
+  mismo k arrancan del mismo U₀, V₀. Se registran iteraciones, f final, SCE
+  sobre Ω_prueba y estimaciones fuera de rango.
+- Se elige el par con menor SCE sobre Ω_prueba, con esta regla de empate:
+  entre todos los pares cuya SCE de prueba está a menos del 1 % de la mejor,
+  gana el de menor k; si hay varios con ese k, gana el de menor SCE de
+  prueba.
 - La selección se hace sobre el mismo conjunto de prueba, así que la SCE
   del par elegido es optimista: se registra esa aclaración.
 - Con el par elegido se corre descenso de gradiente sobre la misma
@@ -77,6 +86,10 @@ entrada a entrada (los huecos no aportan error):
 - SCE sobre Ω_prueba: Σ_{(i,j) ∈ Ω_prueba} (r_ij − r̂_ij)².
 - Estimaciones fuera de rango: sobre todos los pares fuera de Ω, porcentaje
   fuera de [ESCALA_MIN − 1, ESCALA_MAX + 1] y máximo de |r̂_ij|.
+  ESCALA_MIN = 0,5 y ESCALA_MAX = 5 (escala del dataset, en config.py), así
+  que el rango permitido es [−0,5; 6]. "Fuera de Ω" son solo los pares no
+  observados (ni en Ω_ent ni en Ω_prueba); los de prueba no cuentan, porque
+  ya se miden con la SCE de prueba.
 - Concentración: experimentos/concentracion.py con el modelo elegido y
   notas con la distribución real. Se reportan las películas en algún top-10
   y el porcentaje de la más frecuente. El vector del usuario simulado se
@@ -96,14 +109,16 @@ CA-R01 Con λ = 0 y sin partición, ALS y descenso de gradiente reproducen
        main: SCE 22.937,3886 en 10 iteraciones y 23.045,8796 en 462.
 CA-R02 resolver_factor con λ > 0 resuelve sin SistemaSingularError un
        usuario con menos de k calificaciones.
-CA-R03 En una matriz chica, la salida de resolver_factor satisface
-       (Vᵀ V + λ I) u = Vᵀ r dentro de una tolerancia.
+CA-R03 En una matriz chica y bien condicionada, la salida de
+       resolver_factor satisface (Vᵀ V + λ I) u = Vᵀ r según np.allclose
+       con rtol = 1e-10.
 CA-R04 En una matriz chica, el gradiente de la sección 5 coincide con
        diferencias finitas de la f de la sección 3.
 CA-R05 La partición es disjunta, su unión es Ω, es reproducible con la
        semilla, y todo usuario y película de prueba tiene calificaciones en
        entrenamiento.
-CA-R06 Los tests de main siguen pasando (55 y 1 salteado).
+CA-R06 Los 55 tests de main siguen pasando sin modificaciones y el único
+       test salteado sigue siendo el de la V₀ del informe.
 CA-R07 Grilla, semilla, fracción de prueba y rango están en config.py o
        como argumentos. Ningún valor hardcodeado.
 CA-R08 specs/bitacora.md registra la tabla completa del barrido (k, λ,

@@ -1,14 +1,15 @@
 # Tareas — Experimento de regularización (rama experimento/regularizacion)
 
-Derivado de `specs/regularizacion.md` (en adelante "spec R"). **No se empieza
-TR01 hasta resolver las siete preguntas pendientes del final.** Las
-preguntas 1, 3, 8, 9 y 12 ya están resueltas y volcadas en la spec R y en
-CLAUDE.md (ver "Preguntas resueltas").
+Derivado de `specs/regularizacion.md` (en adelante "spec R"). Las doce
+preguntas de la propuesta original están resueltas y volcadas en la spec R y
+en CLAUDE.md (ver "Preguntas resueltas" al final): se puede arrancar TR01.
 
 Reglas de trabajo (las de CLAUDE.md, aplicadas a esta rama):
 - Una tarea por vez: primero el test, verlo fallar, después el código mínimo,
   después `pytest -q` completo. Una tarea no está terminada si falla algún
-  test, incluidos los de main (CA-R06 se verifica en todas las tareas).
+  test, incluidos los de main (CA-R06 se verifica en todas las tareas: los
+  55 tests de main siguen pasando sin modificaciones; los tests nuevos se
+  agregan, nunca se edita uno existente).
 - Todo parámetro nuevo de `src/` lleva default que reproduce main (λ = 0).
 - Los tests que necesitan el dataset real se marcan `@pytest.mark.movielens`.
 - Commit al cerrar cada tarea, solo con los archivos que lista, mensaje
@@ -34,21 +35,23 @@ con Rᵀ y Mᵀ.
 **Cierra:** CA-R02, CA-R03.
 **Test que se escribe primero:**
 - `test_als.py::test_resolver_factor_con_lambda_satisface_las_ecuaciones_normales_regularizadas`
-  (CA-R03: matriz chica a mano, verificar (Vᵀ V + λ I) u = Vᵀ r con tolerancia,
-  ver pregunta 11).
+  (CA-R03: matriz chica y bien condicionada, armada a mano; verificar
+  (Vᵀ V + λ I) u = Vᵀ r con `np.allclose(..., rtol=1e-10)`).
 - `test_als.py::test_resolver_factor_con_lambda_positivo_no_es_singular_con_menos_de_k_calificaciones`
   (CA-R02: usuario con 1 calificación y k = 2, λ > 0 → sin `SistemaSingularError`).
 - `test_als.py::test_resolver_factor_con_lambda_cero_es_identico_al_actual`
   (igualdad exacta con la llamada sin λ en una matriz chica).
 
 ### [ ] TR02 — f regularizada (spec R §3)
-**Objetivo:** f(U, V) = SCE sobre Ω + λ (Σ‖U_i‖² + Σ‖V_j‖²) en el módulo
-compartido, con λ = 0 igual a la SCE de main. Forma (función nueva o
-parámetro de `sce`): ver pregunta 2.
+**Objetivo:** función aparte `f_regularizada(R, M, U, V, λ)` = SCE sobre Ω
++ λ (Σ‖U_i‖² + Σ‖V_j‖²) en el módulo compartido (spec R §3). `sce` no se
+toca: queda como la SCE pura y es la que se usa para medir sobre Ω_prueba;
+`f_regularizada` es la de los criterios de corte.
 **Archivos:** `src/modelo.py`.
 **Cierra:** ninguno (soporte de CA-R01 y CA-R04).
 **Test que se escribe primero:**
-- `test_modelo.py::test_f_regularizada_con_lambda_cero_es_la_sce` (igualdad exacta).
+- `test_modelo.py::test_f_regularizada_con_lambda_cero_es_la_sce`
+  (`f_regularizada(..., 0) == sce(...)`, igualdad exacta).
 - `test_modelo.py::test_f_regularizada_suma_lambda_por_normas_al_cuadrado`
   (valor calculado a mano en una matriz de 2 × 2).
 - `test_modelo.py::test_f_regularizada_ignora_valores_fuera_de_omega`
@@ -61,14 +64,16 @@ con λ default 0; los dos gradientes se siguen calculando sobre el mismo (U, V).
 **Cierra:** CA-R04.
 **Test que se escribe primero:**
 - `test_gd_factorizacion.py::test_gradiente_con_lambda_coincide_con_diferencias_finitas`
-  (CA-R04: con la f de TR02, λ > 0, error relativo < 1e-5 como CA-07).
+  (CA-R04: diferencias finitas de `f_regularizada`, λ > 0, error relativo
+  < 1e-5 como CA-07).
 - El test actual de CA-07 sigue pasando sin cambios (λ = 0).
 
 ### [ ] TR04 — λ en `entrenar_als` y `entrenar_gd`, y garantía de main
 **Objetivo:** pasar λ (default 0) a los dos entrenamientos (spec R §11): ALS
 usa `resolver_factor(..., λ)`, GD usa `gradiente_sce(..., λ)`, y ambos cortan
-con |f(t+1) − f(t)| < ε usando la f de TR02. `DivergenciaError` igual que en
-main.
+con |f(t+1) − f(t)| < ε usando `f_regularizada` (que con λ = 0 es la `sce`
+que usan hoy). `historial_f` guarda los valores de `f_regularizada`.
+`DivergenciaError` igual que en main.
 **Archivos:** `src/als.py`, `src/gradiente.py`.
 **Cierra:** CA-R01.
 **Test que se escribe primero:**
@@ -106,12 +111,16 @@ fuera de Ω (spec R §8), y `evaluar_criterios` contra la spec R §9. Recibe
 por separado lo que sale de la partición (criterio 2: SCE de prueba del par
 elegido y de (k = 2, λ = 0)) y lo que sale del modelo reentrenado sobre
 todo Ω (criterios 3 y 4), según spec R §7. Constantes nuevas en
-`config.py`: `ESCALA_MIN`, `ESCALA_MAX` (ver pregunta 4) y los umbrales de
-§9 (congelados desde acá, ver arriba).
+`config.py`: `ESCALA_MIN` = 0,5 y `ESCALA_MAX` = 5 (rango permitido
+[−0,5; 6]) y los umbrales de §9 (congelados desde acá, ver arriba). "Fuera
+de Ω" son solo los pares no observados: ni Ω_ent ni Ω_prueba (spec R §8).
 **Archivos:** `experimentos/regularizacion.py`, `src/config.py`.
 **Cierra:** CA-R07 (parte de rango y umbrales).
 **Test que se escribe primero:**
-- `test_experimento_regularizacion.py::test_fuera_de_rango_cuenta_solo_pares_fuera_de_omega`.
+- `test_experimento_regularizacion.py::test_fuera_de_rango_cuenta_solo_pares_no_observados`
+  (los pares de Ω_prueba con r̂ fuera de [−0,5; 6] no cuentan).
+- `test_experimento_regularizacion.py::test_fuera_de_rango_usa_los_limites_menos_medio_y_seis`
+  (r̂ = −0,5 y r̂ = 6 están dentro; −0,51 y 6,01, fuera).
 - `test_experimento_regularizacion.py::test_evaluar_criterios_falla_si_k_es_2`,
   `..._falla_si_la_sce_de_prueba_no_mejora_a_k2_lambda0`,
   `..._falla_con_mas_de_1_por_ciento_fuera_de_rango`,
@@ -120,21 +129,25 @@ todo Ω (criterios 3 y 4), según spec R §7. Constantes nuevas en
 
 ### [ ] TR07 — Barrido de (k, λ) y selección
 **Objetivo:** para cada par de la grilla (`GRILLA_K` = {2, 3, 5, 10},
-`GRILLA_LAMBDA` = {0, 1, 5, 10, 20} en `config.py`), ALS sobre Ω_ent desde la
-inicialización de la semilla de config (ver pregunta 7), registrando
+`GRILLA_LAMBDA` = {0, 1, 5, 10, 20} en `config.py`), ALS sobre Ω_ent con U₀,
+V₀ generados con `SEMILLA_INICIALIZACION` (nueva en `config.py`, separada de
+`SEMILLA_PARTICION`; la misma para todos los pares), registrando
 iteraciones, f final, SCE sobre Ω_prueba y fuera de rango (spec R §7). Un
 par que falla (`SistemaSingularError`) queda en la tabla con el error, no
-corta el barrido. Selección: menor SCE de prueba, con la regla de empate
-del 1 % (ver pregunta 6). CLI `python -m experimentos.regularizacion` con
-todo como argumentos (defaults de config).
+corta el barrido. Selección: entre los pares a menos del 1 % de la mejor
+SCE de prueba gana el de menor k; si hay varios con ese k, el de menor SCE
+de prueba. CLI `python -m experimentos.regularizacion` con todo como
+argumentos (defaults de config).
 **Archivos:** `experimentos/regularizacion.py`, `src/config.py`.
 **Cierra:** CA-R07.
 **Test que se escribe primero:**
 - `test_experimento_regularizacion.py::test_barrido_devuelve_una_fila_por_par_de_la_grilla`
   (matriz chica, grilla chica pasada por argumento).
 - `test_experimento_regularizacion.py::test_barrido_registra_el_error_de_un_par_singular_y_sigue`.
-- `test_experimento_regularizacion.py::test_seleccion_elige_menor_sce_de_prueba`
-  y `..._con_empate_menor_al_1_por_ciento_gana_el_menor_k` (filas sintéticas).
+- `test_experimento_regularizacion.py::test_seleccion_elige_menor_sce_de_prueba`,
+  `..._con_empate_menor_al_1_por_ciento_gana_el_menor_k` y
+  `..._con_varios_pares_del_menor_k_gana_el_de_menor_sce` (filas sintéticas).
+- `test_experimento_regularizacion.py::test_todos_los_lambda_de_un_k_arrancan_del_mismo_u0_v0`.
 - `test_experimento_regularizacion.py::test_parser_toma_los_defaults_de_config` (CA-R07).
 
 ### [ ] TR08 — Reentrenamiento sobre todo Ω y verificación con GD
@@ -184,8 +197,9 @@ veredicto contra la spec R §9 (criterio 2 sobre la partición; 3 y 4 sobre
 el modelo reentrenado). Si falla algún criterio se registra igual y la rama
 no se integra.
 **Archivos:** `specs/bitacora.md`.
-**Cierra:** CA-R08, CA-R06 (verificación final: todos los tests de main
-siguen pasando).
+**Cierra:** CA-R08, CA-R06 (verificación final: los 55 tests de main
+siguen pasando sin modificaciones y el único salteado es el de la V₀ del
+informe).
 **Test que se escribe primero:** ninguno nuevo (tarea de corrida y
 registro); antes de correr, `pytest -q` completo en verde.
 
@@ -193,9 +207,23 @@ registro); antes de correr, `pytest -q` completo en verde.
 
 1. **Solver.** main usa `np.linalg.solve`, permitido por la regla 5 (prohíbe
    inv, lstsq y pinv). Spec R §4 corregida; TR01 lo usa.
+2. **Dónde vive la f de §3.** Función aparte, `f_regularizada`, en
+   `src/modelo.py`; `sce` queda como la SCE pura y se usa para medir sobre
+   Ω_prueba; `f_regularizada` se usa en los criterios de corte. Con λ = 0,
+   `f_regularizada == sce`. Spec R §3 y §5; TR02, TR03, TR04.
 3. **λ en `entrenar_als` y `entrenar_gd`.** Sí reciben λ; duplicar los
    bucles en `experimentos/` haría que CA-R01 no pruebe el código real.
    Spec R §11 corregida; TR04 lo implementa.
+4. **Rango de §8.** `ESCALA_MIN` = 0,5 y `ESCALA_MAX` = 5 (escala del
+   dataset); rango permitido [−0,5; 6]. Spec R §8; TR06.
+5. **"Fuera de Ω" con partición.** Solo los pares no observados; los de
+   prueba no cuentan. Spec R §8; TR06.
+6. **Empate del 1 %.** Entre los pares a menos del 1 % de la mejor SCE de
+   prueba gana el de menor k; si hay varios con ese k, el de menor SCE de
+   prueba. Spec R §7; TR07.
+7. **Misma inicialización con k distintos.** Misma semilla para todos los
+   pares, `SEMILLA_INICIALIZACION` en `config.py`, separada de
+   `SEMILLA_PARTICION`. Spec R §7; TR07.
 8. **GD diverge con el par elegido.** η se divide por 2 desde la misma
    inicialización, hasta `MAX_REDUCCIONES_ETA` veces (default 3, en
    `config.py`); cada intento se registra; si sigue divergiendo, se registra
@@ -204,36 +232,11 @@ registro); antes de correr, `pytest -q` completo en verde.
    (k, λ); elegido el par, se reentrena con ALS sobre todo Ω, y sobre ese
    modelo se evalúan los criterios 3 y 4 (el 2, sobre la partición). Spec R
    §7; TR08 (a), TR09.
+10. **CA-R06.** "Los 55 tests de main siguen pasando sin modificaciones y el
+    único test salteado sigue siendo el de la V₀ del informe". Spec R §10;
+    reglas de trabajo y TR10.
+11. **Tolerancia de CA-R03.** `np.allclose` con rtol = 1e-10, sobre una
+    matriz chica y bien condicionada. Spec R §10; TR01.
 12. **CLAUDE.md.** Regla 1 sin el guion de más; regla 3 habla de "función a
     minimizar f (la SCE en main; la SCE más el término λ en esta rama)".
     Commiteado junto con las dos specs.
-
-## Preguntas pendientes (necesito respuesta antes de TR01)
-
-2. **Dónde vive la f de la sección 3.** `sce` está en `src/modelo.py`, que
-   según la regla 3 es lo único compartido entre ALS y GD, junto con la
-   inicialización y la predicción. ¿Se agrega λ como parámetro de `sce`
-   (default 0) o se crea una función aparte, por ejemplo `f_regularizada`, y
-   `sce` queda como la SCE pura que se usa para medir sobre Ω_prueba? Con
-   λ > 0 ya no es una "suma de cuadrados del error", por eso propongo la
-   función aparte.
-4. **Rango de §8.** El dataset va de 0,5 a 5. ¿`ESCALA_MIN` es 0,5 (rango
-   permitido [−0,5; 6]) o 1, la escala de la página (rango [0; 6])?
-5. **"Fuera de Ω" en §8 con partición.** ¿Los pares fuera de Ω son los que no
-   están ni en Ω_ent ni en Ω_prueba (no observados), o también cuentan los de
-   prueba (todo lo que no es Ω_ent)? Propongo lo primero, porque los de
-   prueba ya se miden con la SCE de prueba.
-6. **Regla de empate del 1 % (§7).** ¿Se compara cada par contra el mejor,
-   y entre todos los que quedan a menos del 1 % de la SCE de prueba mínima
-   gana el de menor k? Si empatan en k, ¿gana el de menor SCE o el de menor
-   λ?
-7. **"Desde la misma inicialización" (§7) con k distintos.** U₀ y V₀ cambian
-   de forma con k. ¿Alcanza con "la misma semilla para todos los pares", o
-   tiene que ser el mismo U₀, V₀ para todos los λ de un mismo k? Con una
-   misma semilla, las dos cosas coinciden para un k dado.
-10. **CA-R06 "55 y 1 salteado".** Con los tests nuevos el total va a subir.
-    ¿Lo interpreto como "los 55 tests de main siguen pasando y el único
-    salteado sigue siendo el de la V₀", sin importar el total?
-11. **Tolerancia de CA-R03.** No está fijada. Propongo `np.allclose` con
-    rtol = 1e-10, porque `np.linalg.solve` resuelve un sistema de k × k bien
-    condicionado. ¿Está bien?
