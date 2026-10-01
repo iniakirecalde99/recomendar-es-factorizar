@@ -9,7 +9,10 @@ Reglas de trabajo (las de CLAUDE.md, aplicadas a esta rama):
   después `pytest -q` completo. Una tarea no está terminada si falla algún
   test, incluidos los de main (CA-R06 se verifica en todas las tareas: los
   55 tests de main siguen pasando sin modificaciones; los tests nuevos se
-  agregan, nunca se edita uno existente).
+  agregan, nunca se edita uno existente). CA-R06 protege lo que verifica
+  cada test de main, no las líneas del archivo: sumar nombres a la línea de
+  imports de un archivo de tests existente no lo viola. Los imports nuevos
+  van en esa línea de arriba, nunca a mitad de archivo ni con `noqa`.
 - Todo parámetro nuevo de `src/` lleva default que reproduce main (λ = 0).
 - Los tests que necesitan el dataset real se marcan `@pytest.mark.movielens`.
 - Commit al cerrar cada tarea, solo con los archivos que lista, mensaje
@@ -47,12 +50,15 @@ con el valor recibido en el mensaje.
   (igualdad exacta con la llamada sin λ, también por el camino transpuesto).
 - `test_als.py::test_resolver_factor_con_lambda_negativo_lanza_value_error_con_el_valor`.
 
-### [ ] TR02 — f regularizada (spec R §3)
-**Objetivo:** función aparte `f_regularizada(R, M, U, V, λ)` = SCE sobre Ω
-+ λ (Σ‖U_i‖² + Σ‖V_j‖²) en el módulo compartido (spec R §3). `sce` no se
+### [x] TR02 — f regularizada (spec R §3) y `validar_lambda`
+**Objetivo:** función aparte `f_regularizada(R, M, U, V, lambda_)` = SCE sobre
+Ω + λ (Σ‖U_i‖² + Σ‖V_j‖²) en el módulo compartido (spec R §3). `sce` no se
 toca: queda como la SCE pura y es la que se usa para medir sobre Ω_prueba;
-`f_regularizada` es la de los criterios de corte.
-**Archivos:** `src/modelo.py`.
+`f_regularizada` es la de los criterios de corte. La validación de λ ≥ 0 se
+centraliza en `validar_lambda` (en `modelo.py`), que usan `f_regularizada` y
+`resolver_factor` (reemplaza el chequeo propio que tenía desde TR01).
+**Archivos:** `src/modelo.py` (`validar_lambda`, `f_regularizada`),
+`src/als.py` (`resolver_factor` usa `validar_lambda`).
 **Cierra:** ninguno (soporte de CA-R01 y CA-R04).
 **Test que se escribe primero:**
 - `test_modelo.py::test_f_regularizada_con_lambda_cero_es_la_sce`
@@ -61,6 +67,9 @@ toca: queda como la SCE pura y es la que se usa para medir sobre Ω_prueba;
   (valor calculado a mano en una matriz de 2 × 2).
 - `test_modelo.py::test_f_regularizada_ignora_valores_fuera_de_omega`
   (como CA-02, con λ > 0).
+- `test_modelo.py::test_f_regularizada_con_lambda_negativo_lanza_lambda_negativo_error`.
+- `test_modelo.py::test_validar_lambda_acepta_cero_y_positivos_y_rechaza_negativos`.
+- Los 4 tests de TR01 siguen pasando sin cambios.
 
 ### [ ] TR03 — λ en `gradiente_sce`
 **Objetivo:** ∇_U f = −2 E V + 2 λ U, ∇_V f = −2 Eᵀ U + 2 λ V (spec R §5),
