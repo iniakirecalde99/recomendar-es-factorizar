@@ -88,7 +88,7 @@ de la SCE. Valida λ con `validar_lambda`.
 - `test_gd_factorizacion.py::test_gradiente_con_lambda_negativo_lanza_lambda_negativo_error`.
 - El test actual de CA-07 sigue pasando sin cambios (λ = 0).
 
-### [ ] TR04 — λ en `entrenar_als` y `entrenar_gd`, y garantía de main
+### [x] TR04 — λ en `entrenar_als` y `entrenar_gd`, y garantía de main
 **Objetivo:** pasar λ (default 0) a los dos entrenamientos (spec R §11): ALS
 usa `resolver_factor(..., λ)`, GD usa `gradiente_sce(..., λ)`, y ambos cortan
 con |f(t+1) − f(t)| < ε usando `f_regularizada` (que con λ = 0 es la `sce`
@@ -105,6 +105,8 @@ que usan hoy). `historial_f` guarda los valores de `f_regularizada`.
   λ > 0: cada paso de ALS minimiza f exactamente, así que f no crece).
 - `test_gd_factorizacion.py::test_iteracion_gd_con_lambda_es_simultanea_contra_referencia`
   (como CA-08, con λ > 0).
+- `test_als.py::test_entrenar_als_con_lambda_cero_es_identico_al_actual`
+  (U, V e historial idénticos a la llamada sin λ).
 
 ### [ ] TR05 — Partición entrenamiento/prueba
 **Objetivo:** después del filtro por umbral, mandar al azar una fracción de Ω
