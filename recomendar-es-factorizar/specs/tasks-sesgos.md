@@ -29,7 +29,7 @@ concentración y criterio → corrida y bitácora.
 
 ## 1. Núcleo en src/sesgos.py
 
-### [ ] TS01 — f con sesgos y predicción (spec S §2)
+### [x] TS01 — f con sesgos y predicción (spec S §2)
 **Objetivo:** en `src/sesgos.py`: `calcular_mu(R, M)` (promedio de las
 calificaciones observadas en M: Ω_ent o todo Ω, según el modelo),
 `predecir_con_sesgos(U, V, b, c, mu)` = μ + b_i + c_j + U_i·V_j, y
