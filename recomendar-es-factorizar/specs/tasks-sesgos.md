@@ -153,7 +153,7 @@ modelo de la partición y los criterios 1, 2 y 4, del reentrenado.
 - `test_experimento_sesgos.py::test_main_corre_de_punta_a_punta_sobre_dataset_chico`
   (humo, dataset sintético, sin MovieLens).
 
-### [ ] TS08 — Corrida única y registro
+### [x] TS08 — Corrida única y registro
 **Objetivo:** correr `python -m experimentos.sesgos` una sola vez sobre
 MovieLens; registrar en `specs/bitacora.md` la tabla completa del barrido, el
 tamaño de la partición, el par elegido, la línea de base, las métricas de A
