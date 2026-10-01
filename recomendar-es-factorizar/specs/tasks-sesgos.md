@@ -60,7 +60,7 @@ de un usuario).
 - `test_sesgos.py::test_ordenamiento_b_da_el_mismo_orden_por_usuario_que_r_hat_sin_c`
   (sumar μ + b_i a una fila no cambia su orden).
 
-### [ ] TS03 — Paso aumentado con `resolver_factor` (spec S §3)
+### [x] TS03 — Paso aumentado con `resolver_factor` (spec S §3)
 **Objetivo:** `paso_usuarios(R, M, V, c, mu, lambda_)` → (U, b): llama a
 `resolver_factor(R − μ − c, M, [V | 1], lambda_)` y separa la última columna
 como b. `paso_peliculas(R, M, U, b, mu, lambda_)` → (V, c): la misma llamada
