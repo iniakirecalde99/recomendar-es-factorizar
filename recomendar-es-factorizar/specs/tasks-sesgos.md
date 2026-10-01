@@ -47,7 +47,7 @@ que verificaba el CA-S01 original, eliminado).
 - `test_sesgos.py::test_f_sesgos_calculada_a_mano` (incluye λ·(b² + c²)).
 - `test_sesgos.py::test_f_sesgos_ignora_valores_fuera_de_omega`.
 
-### [ ] TS02 — Ordenamientos A y B (spec S §6)
+### [x] TS02 — Ordenamientos A y B (spec S §6)
 **Objetivo:** `puntajes_ordenamiento_a(U, V, b, c, mu)` = r̂ completo y
 `puntajes_ordenamiento_b(U, V)` = U·Vᵀ (sin c_j; μ y b_i no cambian el orden
 de un usuario).
