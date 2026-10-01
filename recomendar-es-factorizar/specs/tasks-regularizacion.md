@@ -26,12 +26,16 @@ corrida y bitácora.
 
 ## 1. Núcleo en src/ (siempre con λ = 0 por defecto)
 
-### [ ] TR01 — λ en `resolver_factor`
-**Objetivo:** agregar el parámetro λ (default 0) a `resolver_factor` y
+### [x] TR01 — λ en `resolver_factor`
+**Objetivo:** agregar el parámetro `lambda_` (default 0) a `resolver_factor` y
 resolver por fila (V_iᵀ V_i + λ I) U_iᵀ = V_iᵀ r_i con `np.linalg.solve`,
 como en main (spec R §4). La misma función sigue resolviendo el paso de V
-con Rᵀ y Mᵀ.
-**Archivos:** `src/als.py`.
+con Rᵀ y Mᵀ. La singularidad se evalúa sobre la A ya regularizada (no había
+chequeo previo por cantidad de calificaciones: se detecta solo por el
+`LinAlgError` de `np.linalg.solve`). `lambda_` < 0 lanza
+`LambdaNegativoError` (hereda de `ErrorFactorizacion` y de `ValueError`)
+con el valor recibido en el mensaje.
+**Archivos:** `src/als.py`, `src/errores.py` (`LambdaNegativoError`).
 **Cierra:** CA-R02, CA-R03.
 **Test que se escribe primero:**
 - `test_als.py::test_resolver_factor_con_lambda_satisface_las_ecuaciones_normales_regularizadas`
@@ -40,7 +44,8 @@ con Rᵀ y Mᵀ.
 - `test_als.py::test_resolver_factor_con_lambda_positivo_no_es_singular_con_menos_de_k_calificaciones`
   (CA-R02: usuario con 1 calificación y k = 2, λ > 0 → sin `SistemaSingularError`).
 - `test_als.py::test_resolver_factor_con_lambda_cero_es_identico_al_actual`
-  (igualdad exacta con la llamada sin λ en una matriz chica).
+  (igualdad exacta con la llamada sin λ, también por el camino transpuesto).
+- `test_als.py::test_resolver_factor_con_lambda_negativo_lanza_value_error_con_el_valor`.
 
 ### [ ] TR02 — f regularizada (spec R §3)
 **Objetivo:** función aparte `f_regularizada(R, M, U, V, λ)` = SCE sobre Ω
@@ -131,7 +136,10 @@ de Ω" son solo los pares no observados: ni Ω_ent ni Ω_prueba (spec R §8).
 **Objetivo:** para cada par de la grilla (`GRILLA_K` = {2, 3, 5, 10},
 `GRILLA_LAMBDA` = {0, 1, 5, 10, 20} en `config.py`), ALS sobre Ω_ent con U₀,
 V₀ generados con `SEMILLA_INICIALIZACION` (nueva en `config.py`, separada de
-`SEMILLA_PARTICION`; la misma para todos los pares), registrando
+`SEMILLA_PARTICION`; la misma para todos los pares; se define como
+`SEMILLA_INICIALIZACION = SEMILLA_DEFECTO`, por referencia y no con el
+literal 42, para que (k = 2, λ = 0) arranque del mismo U₀, V₀ que main),
+registrando
 iteraciones, f final, SCE sobre Ω_prueba y fuera de rango (spec R §7). Un
 par que falla (`SistemaSingularError`) queda en la tabla con el error, no
 corta el barrido. Selección: entre los pares a menos del 1 % de la mejor
