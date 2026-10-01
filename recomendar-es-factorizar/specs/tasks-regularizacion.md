@@ -71,15 +71,21 @@ centraliza en `validar_lambda` (en `modelo.py`), que usan `f_regularizada` y
 - `test_modelo.py::test_validar_lambda_acepta_cero_y_positivos_y_rechaza_negativos`.
 - Los 4 tests de TR01 siguen pasando sin cambios.
 
-### [ ] TR03 — λ en `gradiente_sce`
+### [x] TR03 — λ en `gradiente_sce`
 **Objetivo:** ∇_U f = −2 E V + 2 λ U, ∇_V f = −2 Eᵀ U + 2 λ V (spec R §5),
-con λ default 0; los dos gradientes se siguen calculando sobre el mismo (U, V).
+con `lambda_` default 0; los dos gradientes se siguen calculando sobre el
+mismo (U, V). `gradiente_sce` conserva el nombre; su docstring aclara que
+devuelve el gradiente de `f_regularizada` (spec R §3), que con λ = 0 es el
+de la SCE. Valida λ con `validar_lambda`.
 **Archivos:** `src/gradiente.py`.
 **Cierra:** CA-R04.
 **Test que se escribe primero:**
 - `test_gd_factorizacion.py::test_gradiente_con_lambda_coincide_con_diferencias_finitas`
   (CA-R04: diferencias finitas de `f_regularizada`, λ > 0, error relativo
   < 1e-5 como CA-07).
+- `test_gd_factorizacion.py::test_gradiente_con_lambda_cero_es_identico_al_actual`
+  (igualdad exacta con la llamada sin λ).
+- `test_gd_factorizacion.py::test_gradiente_con_lambda_negativo_lanza_lambda_negativo_error`.
 - El test actual de CA-07 sigue pasando sin cambios (λ = 0).
 
 ### [ ] TR04 — λ en `entrenar_als` y `entrenar_gd`, y garantía de main
